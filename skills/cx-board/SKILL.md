@@ -42,10 +42,10 @@ A file moved to `done/` keeps every line you wrote and gains `done` (`read`, `di
 
 ## The seller's answers
 
-Answers come to you as one message from the seller. Each entry answered is a marker naming its file, then the seller's words for it:
+Answers come to you as one message from the seller. Each entry answered is a marker naming its file and the time of the version answered, then the seller's words for it:
 
 ```text
-<board file="20261027-021400-lower-kettle-price.md">Lower the price of the blue kettle to $24.99</board>
+<board file="20261027-021400-lower-kettle-price.md" modified="1761531240000">Lower the price of the blue kettle to $24.99</board>
 Go ahead.
 ```
 
