@@ -30,7 +30,17 @@ Your words.
 
 A file without these three, or with another kind, is drawn as a file name and a time alone.
 
-Nothing on the page marks what cannot be undone; only the entry's own words say it.
+Your words under the front matter are a few lines, written for the seller:
+
+- the figures that matter, one reason, and where they come from;
+- no request method, no path and no note on what you were allowed to do;
+- a longer piece stays in a file of its own, named by its title.
+
+Nothing on the page marks what cannot be undone; only the entry's own words say it, once, in a line of its own.
+
+## The page's names
+
+Call the board and its parts by the names the seller sees, in the seller's language: 看板 / the board, 待处理 / To do, 已处理 / Done, 已读 / Mark as read, 忽略 / Dismiss, 交给 cx / Send to cx.
 
 ## What the seller does with an entry
 
