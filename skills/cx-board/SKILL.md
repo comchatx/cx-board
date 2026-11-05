@@ -15,7 +15,7 @@ One file is one Markdown file under `todo/`, named `<time>-<slug>.md`, where `<t
 Your words.
 ```
 
-The seller sees when the file was written, its heading as its title, and your words. A file with no heading is named by its file name. A Markdown file a plugin writes directly in the seller's board directory waits as one under `todo/` does. A hand-over names such a file `../<name>`, its path from `todo/`: the file itself sits in the board's directory.
+The seller sees when the file was written, its heading as its title, and your words. A file with no heading is named by its file name. A Markdown file a plugin writes directly in the seller's board directory waits as one under `todo/` does. A hand-over names such a file `../<name>`, its path from `todo/`; once handed over it sits under `done/` as `<name>`, or `<name>-2`, `-3` when another had the name, as a file from `todo/` does.
 
 Your words are a few lines: the figures that matter, one reason, and where they come from.
 
