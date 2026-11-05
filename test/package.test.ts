@@ -31,7 +31,9 @@ it("the pinned pi lists the package's skills as its manifest names them, with no
 });
 
 it("ships its skills, its README and its license, and nothing else", () => {
-  const packed = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8" })) as { files: { path: string }[] }[];
+  // npm 12 keys its answer by the package's name; earlier ones answer a list.
+  const answer = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8" })) as { files: { path: string }[] }[] | Record<string, { files: { path: string }[] }>;
+  const packed = Array.isArray(answer) ? answer : Object.values(answer);
   const skills = walk(join(ROOT, "skills")).map((path) => relative(ROOT, path));
   expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "package.json", ...skills].sort());
   expect(manifest.files).toEqual(["skills"]);
