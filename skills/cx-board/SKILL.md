@@ -3,7 +3,7 @@ name: cx-board
 description: The seller's board, a column beside the chat that shows Markdown files as cards. Use when you leave the seller something to read later, such as a finding, a report or a draft.
 ---
 
-The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. It holds directories and nothing else: each directory is a tab, named by its directory's name, and the seller sees the tabs by name in a column beside the chat. Each Markdown file in a tab is a card: the seller sees when it was written, its title, and your words, drawn as your answers in the chat are. Anyone may leave one: you, a plugin's skill, a script. A plugin's skill names the tab it writes to.
+The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. It holds directories and nothing else: each directory is a tab, named by its directory's name, and the seller sees the tabs by name in a column beside the chat. Each Markdown file in a tab, at any depth under it, is a card: the seller sees when it was written, its title, and your words, drawn as your answers in the chat are. Anyone may leave one: you, a plugin's skill, a script. A plugin's skill names the tab it writes to.
 
 ## A tab
 
@@ -25,7 +25,7 @@ The board shows its directories as they are. A file is yours to change, move or 
 
 ## After you leave a file
 
-The column does not open by itself. Say in your reply that you put a file on the board, by its title and its tab, so the seller can open the board by its icon.
+When a turn of yours leaves a new file, the column opens beside the chat by itself on the tab the file landed in, unless the seller shut it that turn. Say in your reply that you put a file on the board, by its title and its tab, so the seller knows where to look.
 
 ## The page's names
 
