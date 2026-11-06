@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A board beside the chat, where cx leaves what it found, changed, proposes and asks.",
   "license": "MIT",
   "author": "ComChatX",
@@ -20,7 +20,8 @@
     ]
   },
   "files": [
-    "skills"
+    "skills",
+    "README.zh-CN.md"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
