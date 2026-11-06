@@ -6,7 +6,7 @@ import { expect, it } from "vitest";
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const skill = readFileSync(join(ROOT, "skills", "cx-board", "SKILL.md"), "utf8");
 
-it("tells cx of the base alone: a file, its heading, its words and Mark as read, and none of the module's kinds, answers or Send to cx", () => {
-  for (const said of ["/tenant/board/", "`todo/`", "`done/`", "Its first line is a heading", "已读 / Mark as read", "done: read"]) expect(skill, said).toContain(said);
-  for (const gone of ["kind:", "proposal", "choice", "input", "交给 cx", "忽略", "The seller's answers", "timed_out"]) expect(skill, gone).not.toContain(gone);
+it("tells cx of the base alone: where the board is, that a file with a title is a card, and that cx says so in the chat, with none of the module's places, marks, kinds or answers", () => {
+  for (const said of ["/tenant/board/", "`title` of its front matter, else its first heading", "The column does not open by itself", "看板 / the board"]) expect(skill, said).toContain(said);
+  for (const gone of ["todo/", "done/", "已读", "Mark as read", "kind:", "proposal", "choice", "交给 cx", "忽略", "deleted"]) expect(skill, gone).not.toContain(gone);
 });

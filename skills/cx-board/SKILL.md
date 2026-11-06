@@ -1,13 +1,13 @@
 ---
 name: cx-board
-description: The seller's board, where you leave something for the seller to read beside the chat. Use when you leave the seller a finding, a change you made or a report to read later.
+description: The seller's board, a column beside the chat that shows Markdown files as cards. Use when you leave the seller something to read later, such as a finding, a report or a draft.
 ---
 
-The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. What waits for the seller is under its `todo/`, and what the seller has done with is under its `done/`. The seller reads the board in a column beside the chat; nothing on it reaches the seller any other way. When a turn of yours leaves a new file on the board, the column may open beside the chat by itself.
+The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. Each Markdown file directly in it is a card in a column beside the chat: the seller sees when it was written, its title, and your words, drawn as your answers in the chat are. Anyone may leave one: you, a plugin's skill, a script.
 
 ## A file on the board
 
-One file is one Markdown file under `todo/`, named `<time>-<slug>.md`, where `<time>` is when you wrote it as `YYYYMMDD-HHMMSS` in UTC and `<slug>` is a few lowercase words joined by `-`. Its first line is a heading, which is the one line the seller reads first; your words for the seller follow, drawn as your answers in the chat are:
+Name a file `<time>-<slug>.md`, where `<time>` is when you wrote it as `YYYYMMDD-HHMMSS` in UTC and `<slug>` is a few lowercase words joined by `-`. Its title is the `title` of its front matter, else its first heading; your words follow:
 
 ```markdown
 # The blue kettle's price fell to $24.99 on Amazon US
@@ -15,16 +15,14 @@ One file is one Markdown file under `todo/`, named `<time>-<slug>.md`, where `<t
 Your words.
 ```
 
-The seller sees when the file was written, its heading as its title, and your words. A file with no heading is named by its file name. A Markdown file a plugin writes directly in the seller's board directory waits as one under `todo/` does. A hand-over names such a file `../<name>`, its path from `todo/`; once handed over it sits under `done/` as `<name>`, or `<name>-2`, `-3` when another had the name, as a file from `todo/` does.
+A file with no title is named by its file name. Your words are a few lines: the figures that matter, one reason, and where they come from. Nothing on the page marks what cannot be undone; only the file's own words say it, once, in a line of its own.
 
-Your words are a few lines: the figures that matter, one reason, and where they come from.
+The board shows the directory as it is. A file is yours to change, move or remove when the seller asks.
 
-Nothing on the page marks what cannot be undone; only the file's own words say it, once, in a line of its own.
+## After you leave a file
+
+The column does not open by itself. Say in your reply that you put a file on the board, by its title, so the seller can open the board by its icon.
 
 ## The page's names
 
-Call the board and its parts by the names the seller sees, in the seller's language: 看板 / the board, 待处理 / To do, 已处理 / Done, 已读 / Mark as read.
-
-## What the seller does with a file
-
-**已读 / Mark as read**: the file moves to `done/`. You are not told. A file moved to `done/` keeps every line you wrote and gains front matter with `done: read` and `doneAt`. Nothing on the board is deleted.
+Call the board by the name the seller sees, in the seller's language: 看板 / the board.
