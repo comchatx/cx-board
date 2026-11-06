@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A board beside the chat, where cx leaves what it found, changed, proposes and asks.",
   "license": "MIT",
   "author": "ComChatX",
@@ -27,7 +27,7 @@
     "test": "vitest run"
   },
   "comchatx": {
-    "about": "在对话旁设一块看板，cx 把发现、改动、建议和问题留在上面。",
+    "about": "在对话旁设一块看板，cx 和插件做出的东西都放在上面。",
     "mark": {
       "line": "clipboard"
     },
