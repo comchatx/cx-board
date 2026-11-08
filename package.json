@@ -1,7 +1,7 @@
 {
   "name": "@comchatx/cx-board",
   "version": "0.3.0",
-  "description": "A board beside the chat, where cx leaves what it found, changed, proposes and asks.",
+  "description": "A board beside the chat for what cx and plugins make.",
   "license": "MIT",
   "author": "ComChatX",
   "homepage": "https://github.com/comchatx/cx-board#readme",
