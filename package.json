@@ -1,7 +1,7 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.3.0",
-  "description": "A board beside the chat for what cx and plugins make.",
+  "version": "0.3.1",
+  "description": "Keeps cx's reports and drafts on a board beside the chat.",
   "license": "MIT",
   "author": "ComChatX",
   "homepage": "https://github.com/comchatx/cx-board#readme",
@@ -28,7 +28,7 @@
     "test": "vitest run"
   },
   "comchatx": {
-    "about": "在对话旁设一块看板，cx 和插件做出的东西都放在上面。",
+    "about": "cx 的报告和草稿放上看板，不会淹没在对话里。",
     "mark": {
       "line": "clipboard"
     },
