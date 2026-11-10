@@ -1,5 +1,7 @@
-A board beside the chat, where cx leaves what the seller is to read.
+Reports, findings and drafts cx leaves for later go on a board beside the chat, opened on the tab where each lands. Have cx add tabs, such as one per store. cx-board-tasks' to-dos and cx-subagents' cards go there too.
 
-Each file is a Markdown file in a tab, one directory per tab under `/tenant/board/<person>/`, its first heading its title.
+Some things you can ask:
 
-The package holds one skill, which tells cx where the board is and what a file on it holds. The column is drawn by ComChatX while the package is installed. To-dos, proposals and questions the seller answers on the board are the module's, `@comchatx/cx-board-tasks`, installed beside this package.
+- Put this competitor analysis on the board.
+- Add a tab called "Amazon US" to the board, and put US reports there from now on.
+- Turn last week's report on the board into a table.

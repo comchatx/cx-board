@@ -1,5 +1,6 @@
 # Changelog
 
+- 0.3.1: The card's line and the Overview, in English and Chinese, are the words signed on 2026-11-10: "Keeps cx's reports and drafts on a board beside the chat." as npm's `description`, and 「cx 的报告和草稿放上看板，不会淹没在对话里。」 as `comchatx.about`. They said "A board beside the chat for what cx and plugins make." and 「在对话旁设一块看板，cx 和插件做出的东西都放在上面。」. `DEVELOPING.md` holds the install line, `pi install npm:@comchatx/cx-board`.
 - 0.3.0: the base is the seller's directory mirrored as cards and nothing else. A Markdown file in it with a title is a card of its title and words; 已读, `todo/` and `done/` move to the to-do and question module. The board holds directories, each a tab by its name, and every Markdown file at any depth under a tab is a card; a tab of the seller's own is cx making a directory. The column opens by itself on the tab a new file landed in, and cx says in its reply where it left the file.
 - 0.2.1: the README in Chinese, `README.zh-CN.md`, which the Plugins page draws as the Overview in Chinese.
 - 0.2.0: the board's base alone. A file is a Markdown file with a heading as its title, read and marked read; the kinds, the answers and 交给 cx move to the to-do and question module, `@comchatx/cx-board-tasks`. The column may open by itself when a turn leaves a new file.
