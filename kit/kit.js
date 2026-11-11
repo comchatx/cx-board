@@ -1,7 +1,7 @@
 // The elements' script: what the board puts into a page, after `kit.css` and before the page's own code. It gives the elements that need
 // a script, a chart, a timeline and a switch, with what a pointer and a keyboard do on them, and a file as a message names one. A page
-// reaches all of it through `Kit`. It carries no words: every line it draws is the page's. The board's own asks are `window.cxBoard`'s,
-// which the board defines; nothing here speaks across the frame's edge or loads anything. Loading it defines `Kit` and nothing else: it
+// reaches all of it through `Kit`. It carries no words: every line it draws is the page's. Nothing here speaks across the frame's edge
+// or loads anything. Loading it defines `Kit` and nothing else: it
 // touches no element and hears no event until the page makes an element with it, and its rules in `kit.css` hold only under `.kit`.
 (() => {
   "use strict";

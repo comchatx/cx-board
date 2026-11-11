@@ -53,7 +53,8 @@ The page reaches the board through `window.cxBoard`, which the board defines:
 - `cxBoard.context` is `{ theme: "light" | "dark", locale: "zh" | "en", width }`, `width` in pixels; `cxBoard.on("context", fn)` hears it change, and `cxBoard.on("files", fn)` hears the board's files change.
 - `cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board; `cxBoard.read(file)` answers a file's text, at most 1 MiB.
 - `cxBoard.draft(text)` puts a sentence in the message box, for the seller to send as their own.
-- `cxBoard.send(text)` sends it as the seller's message, one for each press inside the page and within a few seconds of it; at any other time it is a draft.
+- `cxBoard.send(text)` sends it as the seller's message, or puts it in the message box where it cannot go at that moment.
+- A draft and a send each need a press, a click or a key typed inside the page: a press gives one draft or one send, and none within five seconds of the last. Without a press the board refuses it, and the page's code cannot make one.
 - `cxBoard.write(file, text)` writes one file in the page's own board.
 - `cxBoard.count(n, words)` puts a number on the board's icon, with the page's words for what it counts.
 - `cxBoard.show(name)` asks for the page's board to be opened and shown, `name` saying what changed.
