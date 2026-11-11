@@ -1,6 +1,6 @@
 ---
 name: cx-board
-description: The seller's board, a column beside the chat that shows Markdown files as cards. Use when you leave the seller something to read later, such as a finding, a report, a draft or a page.
+description: The seller's board, a column beside the chat that shows Markdown files as cards, or a board's page in their place. Use when the seller asks for something to be put, changed or found on the board, or when another plugin's skill names the board.
 ---
 
 The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. Where several people share a computer, each has a board of their own, and yours is `/tenant/board/<person>/`, `<person>` being the account the board is drawn for. It holds directories and nothing else: each directory is a tab, named by its directory's name, and the seller sees the tabs by name in a column beside the chat. Each Markdown file in a tab, at any depth under it, is a card: the seller sees when it was written, its title, and your words, drawn as your answers in the chat are. Anyone may leave one: you, a plugin's skill, a script. A plugin's skill names the tab it writes to.
@@ -11,7 +11,7 @@ When the seller asks for a tab of their own, make a directory of the name they g
 
 ## A file on the board
 
-Put a file in its tab's directory and name it `<time>-<slug>.md`, where `<time>` is when you wrote it as `YYYYMMDD-HHMMSS` in UTC and `<slug>` is a few lowercase words joined by `-`. Its title is the `title` of its front matter, else its first heading; your words follow:
+A file sits in its tab's directory, named `<time>-<slug>.md`, where `<time>` is when it was written as `YYYYMMDD-HHMMSS` in UTC and `<slug>` is a few lowercase words joined by `-`. Its title is the `title` of its front matter, else its first heading; your words follow:
 
 ```markdown
 # The blue kettle's price fell to $24.99 on Amazon US
@@ -25,9 +25,9 @@ The board shows its directories as they are. A file is yours to change, move or 
 
 A file on the board does not hold your turn: the seller reads it when they come to the board. A question asked in the turn, through pi's question box, holds it until the seller answers.
 
-## After you leave a file
+## When a file lands
 
-When a turn of yours leaves a new file, the column opens beside the chat by itself on the tab the file landed in, unless the seller shut it that turn. Say in your reply that you put a file on the board, by its title and its tab, so the seller knows where to look.
+When a turn of yours leaves a new file, the column opens beside the chat by itself on the tab the file landed in, unless the seller shut it that turn.
 
 ## A page
 

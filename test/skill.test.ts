@@ -6,7 +6,12 @@ import { expect, it } from "vitest";
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const skill = readFileSync(join(ROOT, "skills", "cx-board", "SKILL.md"), "utf8");
 
-it("tells cx of the base alone: where the board is, that a file with a title is a card, and that cx says so in the chat, with none of the module's places, marks, kinds or answers", () => {
+it("is used on the two occasions alone: the seller asks for something on the board, or another plugin's skill names it", () => {
+  expect(skill).toContain("\ndescription: The seller's board, a column beside the chat that shows Markdown files as cards, or a board's page in their place. Use when the seller asks for something to be put, changed or found on the board, or when another plugin's skill names the board.\n");
+  for (const unasked of ["something to read later", "Say in your reply", "Put a file", "When you leave"]) expect(skill, unasked).not.toContain(unasked);
+});
+
+it("tells cx of the base alone: where the board is, that a file with a title is a card, and that the column opens on its tab, with none of the module's places, marks, kinds or answers", () => {
   for (const said of ["/tenant/board/", "`title` of its front matter, else its first heading", "opens beside the chat by itself on the tab the file landed in", "at any depth under it", "看板 / the board", "each directory is a tab", "make a directory of the name they give"]) expect(skill, said).toContain(said);
   for (const gone of ["todo/", "done/", "已读", "Mark as read", "kind:", "proposal", "choice", "交给 cx", "忽略", "deleted"]) expect(skill, gone).not.toContain(gone);
 });
