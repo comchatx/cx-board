@@ -1,11 +1,11 @@
 // The elements' script: what the board puts into a page, after `kit.css` and before the page's own code. It gives the elements that need
 // a script, a chart, a timeline and a switch, with what a pointer and a keyboard do on them, and a file as a message names one. A page
 // reaches all of it through `Kit`. It carries no words: every line it draws is the page's. The board's own asks are `window.cxBoard`'s,
-// which the board defines; nothing here speaks across the frame's edge or loads anything.
+// which the board defines; nothing here speaks across the frame's edge or loads anything. Loading it defines `Kit` and nothing else: it
+// touches no element and hears no event until the page makes an element with it, and its rules in `kit.css` hold only under `.kit`.
 (() => {
   "use strict";
   const root = document.documentElement;
-  root.classList.add("kit");
   // The board sets `lang` on the page's root; Chinese joins a name and its figure with its own comma.
   const zh = () => /^zh\b/i.test(root.lang);
   const join = (a, b) => `${a}${zh() ? "，" : ", "}${b}`;
@@ -31,8 +31,10 @@
   // ---- The label over what the pointer or the keyboard is on, drawn as the board draws its own ----
   const tip = h("div", { class: "cx-tip", hidden: true, "aria-hidden": "true" });
   let tipped;
+  let heard = false;
   function showTip(target, words) {
-    if (!tip.isConnected) document.body.append(tip);
+    if (!heard) { heard = true; addEventListener("scroll", () => hideTip(), { passive: true }); }
+    if (!tip.isConnected || !tip.parentElement.contains(target)) (target.closest(".kit") ?? document.body).append(tip);
     tipped = target;
     tip.textContent = words;
     tip.hidden = false;
@@ -49,7 +51,6 @@
     target.addEventListener("focus", () => { if (byKeyboard(target)) showTip(target, words); });
     target.addEventListener("blur", () => hideTip(target));
   }
-  addEventListener("scroll", () => hideTip(), { passive: true });
 
   /** One Tab stop for a row of like things: the arrows named go to the one before and the one after, Home to the first, End to the last. */
   function rove(box, items, back, on) {

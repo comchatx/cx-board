@@ -100,3 +100,34 @@ it("gives a page the signed elements: a card, a button in its three looks, a fie
   expect(js).toContain('rove(list, buttons, "ArrowUp", "ArrowDown")');
   expect(js).not.toContain("cxBoard =");
 });
+
+/** Each selector of the stylesheet, its comments left out, inside an `@media` or not. */
+function selectors(source: string): string[] {
+  const plain = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  const found: string[] = [];
+  for (const match of plain.matchAll(/([^{}]+)\{/g)) {
+    const head = match[1]!.trim();
+    if (head.startsWith("@")) continue;
+    let depth = 0;
+    let part = "";
+    for (const one of head) {
+      if (one === "(") depth += 1;
+      if (one === ")") depth -= 1;
+      if (one === "," && depth === 0) { found.push(part.trim()); part = ""; } else part += one;
+    }
+    found.push(part.trim());
+  }
+  return found;
+}
+
+it("holds every rule under the class a page takes the kit by, so a page that does not take it is drawn as written", () => {
+  const all = selectors(css);
+  expect(all.length).toBeGreaterThan(100);
+  const outside = all.filter((selector) => {
+    const scoped = selector.replace(/^:where\(\[data-theme="(dark|light)"\]\)\s+/, "");
+    const first = scoped.split(/\s+|>|\+|~/)[0]!;
+    return !(scoped.startsWith(":where(.kit)") || /^(body)?\.kit(?![\w-])/.test(first));
+  });
+  expect(outside).toEqual([]);
+  expect(css.replace(/\/\*[\s\S]*?\*\//g, "")).not.toMatch(/:root|(^|[\s,}])html[\s.{,:[]/);
+});

@@ -17,6 +17,7 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
     "a row saying cx made it",
     "loads nothing from the network",
     "no `<link>` or `<script>`",
+    "A page takes them by `<body class=\"kit\">`", "a page without that class is drawn as it is written",
     "`<article class=\"entry\">`", "`<button class=\"primary\">`", "`<input class=\"entry-field\">`", "`<dl class=\"bp-figures\">`", "`<ul class=\"kit-files\">`", "`<p class=\"board-empty\">`", "`Kit.views(", "`Kit.chart(", "`Kit.timeline(",
     "The elements carry no words",
     "`window.cxBoard`, which the board defines",
