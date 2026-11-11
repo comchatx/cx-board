@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Keeps cx's reports and drafts on a board beside the chat.",
   "license": "MIT",
   "author": "ComChatX",
@@ -28,6 +28,7 @@
     "test": "vitest run"
   },
   "comchatx": {
+    "name": "Board",
     "about": "cx 的报告和草稿放上看板，不会淹没在对话里。",
     "mark": {
       "line": "clipboard"
