@@ -131,3 +131,17 @@ it("holds every rule under the class a page takes the kit by, so a page that doe
   expect(outside).toEqual([]);
   expect(css.replace(/\/\*[\s\S]*?\*\//g, "")).not.toMatch(/:root|(^|[\s,}])html[\s.{,:[]/);
 });
+
+it("touches nothing at load that it did not make: no write to the page's root or body, no search for the page's own elements, no listener before a label is shown", () => {
+  const code = js.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const reach of ["document.body.", "document.documentElement.", "root.", "querySelector", "getElementsBy", "getElementById", "MutationObserver", "document.addEventListener", "document.write", "classList", ".dataset.theme"]) {
+    const uses = code.split(reach).length - 1;
+    // The label is put in the page's body only where no `.kit` holds the element it labels; `root.lang` is read, never written.
+    const allowed = { "document.body.": 0, "root.": 1 }[reach] ?? 0;
+    expect(uses, reach).toBe(allowed);
+  }
+  expect(code).toMatch(/root\.lang\)/);
+  // The one listener on the window is added on the first label shown, inside showTip.
+  expect([...code.matchAll(/^ {2}addEventListener\(/gm)]).toEqual([]);
+  expect(code).toMatch(/function showTip[\s\S]*?addEventListener\("scroll"/);
+});
