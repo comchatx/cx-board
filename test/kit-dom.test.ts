@@ -8,11 +8,12 @@ const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const css = readFileSync(join(ROOT, "kit", "kit.css"), "utf8");
 const js = readFileSync(join(ROOT, "kit", "kit.js"), "utf8");
 const theme = JSON.parse(readFileSync(join(ROOT, "kit", "theme.json"), "utf8")) as Record<string, string>;
+const names = Object.keys(theme).filter((name) => name.startsWith("--"));
 const windows: Window[] = [];
 afterEach(async () => { for (const window of windows.splice(0)) await window.happyDOM.close(); });
 
 // The platform's part: a value for every name the kit reads, on the page's root. Each is a length, so a rule that reads one shows.
-const values = `:root { ${Object.keys(theme).map((name, at) => `${name}: ${at + 1}px;`).join(" ")} }`;
+const values = `:root { ${names.map((name, at) => `${name}: ${at + 1}px;`).join(" ")} }`;
 
 // A page of its own: plain tags, and classes a page may well use for itself, under the dark theme.
 const plain = `<h1>Restock</h1><p class="row">A <a href="#x">link</a> and <code>x</code>.</p><button>Plain</button><button class="primary">Go</button>
@@ -60,8 +61,8 @@ it("draws the same markup in the kit's look once the page takes it by class=\"ki
   const bare = page(plain);
   const kit = page(plain, "kit");
   const button = (document: Document, window: Window) => window.getComputedStyle(document.querySelector("button") as never);
-  // `--radius` is the theme's 38th name here, so 38px.
-  expect(button(kit.document, kit.window).getPropertyValue("border-top-left-radius")).toBe(`${Object.keys(theme).indexOf("--radius") + 1}px`);
+  // `--radius` is set to its place in the list, in px.
+  expect(button(kit.document, kit.window).getPropertyValue("border-top-left-radius")).toBe(`${names.indexOf("--radius") + 1}px`);
   expect(button(bare.document, bare.window).getPropertyValue("border-top-left-radius")).not.toBe(button(kit.document, kit.window).getPropertyValue("border-top-left-radius"));
 });
 
@@ -103,7 +104,13 @@ it("gives the chart's bars and the timeline's rows one Tab stop each, the arrows
   bars[0]!.dispatchEvent(new window.Event("mouseleave") as never);
   expect(tip.hidden).toBe(true);
 
+  const one = () => Kit.chart({ label: "c", most: 1, scale: ["1", "0"], bars: [{ name: "a", figure: "1", value: 1 }] }).querySelector("button")!.getAttribute("aria-label");
   document.documentElement.lang = "zh-CN";
-  const zh = Kit.chart({ label: "c", most: 1, scale: ["1", "0"], bars: [{ name: "a", figure: "1", value: 1 }] });
-  expect(zh.querySelector("button")!.getAttribute("aria-label")).toBe("a，1");
+  expect(one()).toBe("a，1");
+  // The board's `data-locale` wins over the page's own `lang`.
+  document.documentElement.dataset.locale = "en";
+  expect(one()).toBe("a, 1");
+  document.documentElement.lang = "en";
+  document.documentElement.dataset.locale = "zh";
+  expect(one()).toBe("a，1");
 });

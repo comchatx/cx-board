@@ -21,6 +21,7 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
     "`<article class=\"entry\">`", "`<button class=\"primary\">`", "`<input class=\"entry-field\">`", "`<dl class=\"bp-figures\">`", "`<ul class=\"kit-files\">`", "`<p class=\"board-empty\">`", "`Kit.views(", "`Kit.chart(", "`Kit.timeline(",
     "The elements carry no words",
     "`window.cxBoard`, which the board defines",
+    "The board passes the page its theme and language on `<html>`, as `data-theme` (`light` or `dark`) and `data-locale` (`zh` or `en`).",
     "`cxBoard.context` is `{ theme: \"light\" | \"dark\", locale: \"zh\" | \"en\", width }`",
     "`cxBoard.on(\"context\", fn)`", "`cxBoard.on(\"files\", fn)`",
     "`cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board",

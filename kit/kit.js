@@ -6,8 +6,9 @@
 (() => {
   "use strict";
   const root = document.documentElement;
-  // The board sets `lang` on the page's root; Chinese joins a name and its figure with its own comma.
-  const zh = () => /^zh\b/i.test(root.lang);
+  // The board names the page's language as `data-locale` on its root, else the page's own `lang` does; Chinese joins a name and its
+  // figure with its own comma.
+  const zh = () => /^zh\b/i.test(root.dataset.locale || root.lang);
   const join = (a, b) => `${a}${zh() ? "，" : ", "}${b}`;
 
   function h(tag, attrs, ...children) {

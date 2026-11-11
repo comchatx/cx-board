@@ -7,6 +7,7 @@ const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const css = readFileSync(join(ROOT, "kit", "kit.css"), "utf8");
 const js = readFileSync(join(ROOT, "kit", "kit.js"), "utf8");
 const theme = JSON.parse(readFileSync(join(ROOT, "kit", "theme.json"), "utf8")) as Record<string, string>;
+const names = Object.keys(theme).filter((name) => name.startsWith("--"));
 
 /** The string literals of a script, template literals' text between their `${}` included, with its comments left out. */
 function literals(source: string): string[] {
@@ -51,7 +52,7 @@ function literals(source: string): string[] {
 it("is a script the browser can compile, and a stylesheet and a list of the theme's names", () => {
   expect(() => new Function(js)).not.toThrow();
   expect(css).toContain(".kit-chart");
-  expect(Object.keys(theme).length).toBeGreaterThan(0);
+  expect(names.length).toBeGreaterThan(0);
 });
 
 it("loads nothing and speaks across no frame's edge: the platform inlines both files under a policy that allows no fetch", () => {
@@ -79,7 +80,8 @@ it("reads only the theme's names the platform sets on the page's root, each of t
   // The chart and the timeline set their own place on each bar, span and hour, in the element's style.
   const own = new Set([...js.matchAll(/(--[\w-]+):\$\{/g)].map((match) => match[1]!));
   expect([...own].sort()).toEqual(["--at", "--from", "--to", "--v"]);
-  expect([...read].filter((name) => !own.has(name)).sort()).toEqual(Object.keys(theme).sort());
+  expect([...read].filter((name) => !own.has(name)).sort()).toEqual([...names].sort());
+  expect(Object.keys(theme).filter((name) => !name.startsWith("--"))).toEqual(["data-theme", "data-locale"]);
   expect(css.match(/(^|[;{\s])--[\w-]+\s*:/g)).toBeNull();
   for (const meaning of Object.values(theme)) expect(meaning.trim()).not.toBe("");
   expect(js).not.toContain("getPropertyValue");
@@ -88,7 +90,7 @@ it("reads only the theme's names the platform sets on the page's root, each of t
 
 it("reads the theme the platform names on the root, and the language for nothing but how a name and its figure are joined", () => {
   expect(css).toContain(':where([data-theme="dark"])');
-  expect(js).toContain("root.lang");
+  expect(js).toContain("root.dataset.locale || root.lang");
   expect(js).not.toContain("dataset.theme");
 });
 
@@ -136,11 +138,11 @@ it("touches nothing at load that it did not make: no write to the page's root or
   const code = js.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
   for (const reach of ["document.body.", "document.documentElement.", "root.", "querySelector", "getElementsBy", "getElementById", "MutationObserver", "document.addEventListener", "document.write", "classList", ".dataset.theme"]) {
     const uses = code.split(reach).length - 1;
-    // The label is put in the page's body only where no `.kit` holds the element it labels; `root.lang` is read, never written.
-    const allowed = { "document.body.": 0, "root.": 1 }[reach] ?? 0;
+    // The label is put in the page's body only where no `.kit` holds the element it labels; `root.dataset.locale` and `root.lang` are read, never written.
+    const allowed = { "document.body.": 0, "root.": 2 }[reach] ?? 0;
     expect(uses, reach).toBe(allowed);
   }
-  expect(code).toMatch(/root\.lang\)/);
+  expect(code).toMatch(/\(root\.dataset\.locale \|\| root\.lang\)/);
   // The one listener on the window is added on the first label shown, inside showTip.
   expect([...code.matchAll(/^ {2}addEventListener\(/gm)]).toEqual([]);
   expect(code).toMatch(/function showTip[\s\S]*?addEventListener\("scroll"/);

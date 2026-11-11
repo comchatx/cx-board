@@ -1,4 +1,6 @@
 {
+  "data-theme": "On the page's <html>, \"light\" or \"dark\": under \"dark\" a button under the pointer is --float-hover. Not a custom property.",
+  "data-locale": "On the page's <html>, \"zh\" or \"en\" (else the page's own lang): under \"zh\" a bar's or a row's name and figure are joined with a Chinese comma. Not a custom property.",
   "--ground": "The page's ground; a field's ground; a running span's open bar.",
   "--raised": "A card's, a row's, a button's and a file's ground; the label's ground.",
   "--wash": "A table's head, a code span, a disabled button, the shown view of a switch, a timeline's track.",

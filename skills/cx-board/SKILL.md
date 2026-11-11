@@ -33,7 +33,7 @@ When a turn of yours leaves a new file, the column opens beside the chat by itse
 
 A board whose folder holds `page.html` at its top is drawn as that page in a frame, in place of its cards. Over the frame, the seller sees a row saying cx made it.
 
-The page runs its own script and loads nothing from the network: its data is written in the page, or read from its own board's folder through `cxBoard`. The board passes the page its theme and its language on `<html>`, as `data-theme` (`light` or `dark`) and `lang`.
+The page runs its own script and loads nothing from the network: its data is written in the page, or read from its own board's folder through `cxBoard`. The board passes the page its theme and language on `<html>`, as `data-theme` (`light` or `dark`) and `data-locale` (`zh` or `en`).
 
 The ready-made elements are in the page before its own code, so a page uses them with no `<link>` or `<script>`. A page takes them by `<body class="kit">`, and is then drawn in the board's look; a page without that class is drawn as it is written. The elements are:
 
@@ -46,7 +46,7 @@ The ready-made elements are in the page before its own code, so a page uses them
 - a list of cards, `<ul class="kit-cards">`, as many across as the width holds; the empty line, `<p class="board-empty">`;
 - from `Kit`, the elements' script: `Kit.views({ label, views, shown, change })`, a switch; `Kit.file(name)`, a file as a message names one, in `<ul class="kit-files">` with `<span class="kit-file-when">`; `Kit.chart({ label, bars, most, scale })`, a chart; `Kit.timeline({ label, hours, spans, pick })`, a timeline; `Kit.h(tag, attrs, ...children)` makes an element.
 
-The elements carry no words: every line on the page is the page's, in the language `lang` names. `<div class="kit-page">` stacks them down the page. The chart's bars and the timeline's rows are one Tab stop each, the arrows move between them, and the one under the pointer or the keyboard shows its label.
+The elements carry no words: every line on the page is the page's, in the language `data-locale` names. `<div class="kit-page">` stacks them down the page. The chart's bars and the timeline's rows are one Tab stop each, the arrows move between them, and the one under the pointer or the keyboard shows its label.
 
 The page reaches the board through `window.cxBoard`, which the board defines:
 
