@@ -1,0 +1,172 @@
+/*
+ * The ready-made elements a board's page is built from. The board puts this file and `kit.js` into a page before the page's own code,
+ * and the page is then drawn in ComChatX's look whoever wrote it: a card (`.entry`), a button in its three looks (`button`,
+ * `button.primary`, `button:disabled`), a field (`.entry-field`), a table (`.markdown table`), a count (`.bp-figures`), a switch
+ * (`.board-views`, made by `Kit.views`), a row with one press (`.bp-row`), a heading (`.bp-head`), a list of cards (`.kit-cards`), a list
+ * of files (`.kit-files`, each made by `Kit.file`), the empty line (`.board-empty`), a chart (`Kit.chart`) and a timeline
+ * (`Kit.timeline`). Every colour, face, size, space and radius is a custom property the board sets on the page's `:root`
+ * (`kit/theme.json` names each); this file sets none of them and fetches nothing. Each rule is under `.kit`, which a page puts on its
+ * `<body>` to take the kit: `:where(.kit)` keeps each rule's weight what it was, so a page's own rule on a kit class still wins.
+ */
+
+/*
+ * ---- The page: a page takes the kit by `class="kit"` on its `<body>`, or on the box that holds the elements ----
+ * Every rule here is under that class, so a page that does not take it is drawn as it was written. The frame is the page's window, so
+ * it scrolls by itself, on the board's ground.
+ */
+body.kit { margin: 0; }
+.kit { padding: var(--space-5) var(--space-6) var(--space-7); background: var(--ground); color: var(--ink); font-family: var(--font-ui); font-size: var(--size-small); line-height: var(--leading-small); accent-color: var(--act); }
+:where(.kit), :where(.kit) * { box-sizing: border-box; }
+:where(.kit) a { color: var(--act); }
+:where(.kit) :focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+:where(.kit) ::selection { background: var(--act-wash); color: var(--ink); }
+:where(.kit) h1, :where(.kit) h2, :where(.kit) h3, :where(.kit) h4, :where(.kit) strong, :where(.kit) b, :where(.kit) th { font-weight: var(--weight-strong); }
+:where(.kit) pre, :where(.kit) code { font-family: var(--font-mono); font-size: var(--size-small); line-height: var(--leading-small); }
+:where(.kit) pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+:where(.kit) .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-5); margin: 0; }
+:where(.kit) .kit-page { display: flex; flex-direction: column; gap: var(--space-5); }
+:where(.kit) .kit-page > * { margin: 0; }
+:where(.kit) .kit-page > .bp-head { margin-top: var(--space-3); }
+:where(.kit) .kit-page > .bp-head:first-child { margin-top: 0; }
+:where(.kit) .icon { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- A button: one shape and size wherever a button carries a word; forest for the one that sends; the wash for one that cannot be pressed ---- */
+:where(.kit) button, :where(.kit) select, :where(.kit) input, :where(.kit) textarea { font: inherit; color: inherit; }
+:where(.kit) button { padding: var(--space-2) var(--space-5); border: 1px solid var(--edge); border-radius: var(--radius); background: var(--raised); font-size: var(--size-small); line-height: var(--leading-small); cursor: pointer; }
+:where(.kit) button:hover:not(:disabled) { background: var(--hover); }
+:where([data-theme="dark"]) :where(.kit) button:hover:not(:disabled) { background: var(--float-hover); }
+:where(.kit) button.primary { border-color: var(--act); background: var(--act); color: var(--act-ink); }
+:where(.kit) button.primary:hover:not(:disabled) { border-color: var(--act-hover); background: var(--act-hover); }
+:where(.kit) button:disabled, :where(.kit) button.primary:disabled { border-color: var(--line); background: var(--wash); color: var(--quiet); cursor: default; }
+:where(.kit) select, :where(.kit) input { padding: var(--space-2) var(--space-4); border: 1px solid var(--edge); border-radius: var(--radius); background: var(--raised); }
+
+/* ---- Words drawn as cx's answers are: a card's body and a table ---- */
+:where(.kit) .markdown { overflow-wrap: anywhere; margin-bottom: var(--space-4); }
+:where(.kit) .markdown > :first-child { margin-top: 0; }
+:where(.kit) .markdown > :last-child { margin-bottom: 0; }
+:where(.kit) .markdown h1 { font-size: var(--size-title); }
+:where(.kit) .markdown h2 { font-size: var(--size-lead); }
+:where(.kit) .markdown h3, :where(.kit) .markdown h4 { font-size: var(--size-body); }
+:where(.kit) .markdown h1, :where(.kit) .markdown h2, :where(.kit) .markdown h3, :where(.kit) .markdown h4 { margin: var(--space-6) 0 var(--space-3); line-height: var(--leading-tight); }
+:where(.kit) .markdown table { border-collapse: collapse; display: block; overflow-x: auto; font-variant-numeric: tabular-nums; }
+:where(.kit) .markdown th, :where(.kit) .markdown td { padding: var(--space-2) var(--space-4); border: 1px solid var(--line); text-align: left; white-space: normal; overflow-wrap: normal; word-break: normal; }
+:where(.kit) .markdown th { background: var(--wash); }
+:where(.kit) .markdown pre { padding: var(--space-4) var(--space-5); border-radius: var(--radius); background: var(--wash); }
+:where(.kit) .markdown code { padding: 0 var(--space-1); border-radius: var(--radius-small); background: var(--wash); }
+:where(.kit) .markdown pre code { padding: 0; background: none; }
+:where(.kit) .markdown blockquote { margin: var(--space-4) 0; padding-left: var(--space-5); border-left: 3px solid var(--line); color: var(--quiet); }
+
+/* ---- A card: when, its title, its words ---- */
+:where(.kit) .entry { padding: var(--space-4) var(--space-5); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); }
+:where(.kit) .entry > * { margin: 0; }
+:where(.kit) .entry > * + *:not([hidden]) { margin-top: var(--space-4); }
+:where(.kit) .entry > .entry-meta + * { margin-top: var(--space-2); }
+:where(.kit) .entry-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); }
+:where(.kit) .entry-title { font-size: var(--size-body); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+:where(.kit) .entry-body { font-size: var(--size-small); line-height: var(--leading-small); }
+:where(.kit) .entry-body p { margin: var(--space-4) 0; }
+/* A table in a card keeps each cell on one line: wider than the page, it scrolls sideways inside its own box. */
+:where(.kit) .entry-body th, :where(.kit) .entry-body td { white-space: nowrap; }
+:where(.kit) .entry-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+:where(.kit) .entry-foot[hidden] { display: none; }
+
+/* ---- A field on the page's ground; with words in it, its edge is ink ---- */
+:where(.kit) .entry-field { width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--edge); border-radius: var(--radius); background: var(--ground); font-size: var(--size-body); line-height: var(--leading-body); }
+:where(.kit) textarea.entry-field { display: block; min-height: calc(6lh + 2 * var(--space-3) + 2px); max-height: 40vh; resize: none; field-sizing: content; }
+:where(.kit) .entry-field::placeholder { color: var(--quiet); opacity: 1; }
+:where(.kit) .entry-field:not(:placeholder-shown) { border-color: var(--ink); }
+
+/* ---- A switch between views of one page: the one shown is ink on wash ---- */
+:where(.kit) .board-views { display: flex; padding: var(--space-1); border: 1px solid var(--line); border-radius: var(--radius); background: var(--hover); }
+:where(.kit) .board-views[hidden] { display: none; }
+:where(.kit) .board-view { padding: var(--space-2) var(--space-5); border: none; border-radius: var(--radius); background: none; color: var(--quiet); }
+:where(.kit) .board-view:hover:not(:disabled) { background: none; color: var(--ink); }
+:where(.kit) .board-view[aria-selected="true"], :where(.kit) .board-view[aria-selected="true"]:hover:not(:disabled) { background: var(--wash); color: var(--ink); font-weight: var(--weight-strong); }
+
+/* ---- The empty line ---- */
+:where(.kit) .board-empty { margin: 0; color: var(--quiet); font-size: var(--size-small); line-height: var(--leading-small); }
+
+/*
+ * ---- Counts, headings and rows ----
+ * Figures stand in a row, each over its name, and go to a second line where the page is narrow; a heading names what is under it; a row
+ * is a card, its words at the left and its one press at the right; a table's figures stand at the end of their cells.
+ */
+:where(.kit) .bp-figures { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-7); margin: 0; }
+:where(.kit) .bp-figure { display: flex; flex-direction: column-reverse; gap: var(--space-1); min-width: 0; }
+:where(.kit) .bp-figure > dt { color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); }
+:where(.kit) .bp-figure > dd { margin: 0; font-size: var(--size-title); font-weight: var(--weight-strong); line-height: var(--leading-tight); font-variant-numeric: tabular-nums; white-space: nowrap; }
+:where(.kit) .bp-head { margin-top: var(--space-3); color: var(--quiet); font-size: var(--size-caption); font-weight: var(--weight-regular); line-height: var(--leading-small); }
+:where(.kit) .bp-rows { display: flex; flex-direction: column; gap: var(--space-4); padding: 0; list-style: none; }
+:where(.kit) .bp-row { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-4) var(--space-5); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); }
+:where(.kit) .bp-words { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+:where(.kit) .bp-words > p { margin: 0; overflow-wrap: anywhere; }
+:where(.kit) .bp-name { font-size: var(--size-body); font-weight: var(--weight-strong); line-height: var(--leading-tight); }
+:where(.kit) .bp-result { font-size: var(--size-small); line-height: var(--leading-small); }
+:where(.kit) .bp-line { color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); }
+:where(.kit) .bp-row > button { flex: none; }
+:where(.kit) .bp-table td:not(:first-child), :where(.kit) .bp-table th:not(:first-child) { text-align: end; font-variant-numeric: tabular-nums; }
+@media (pointer: coarse), not (min-width: 56rem) {
+  :where(.kit) .bp-row > button { min-height: var(--space-8); }
+}
+
+/*
+ * ---- A list of cards: one column in a narrow page and as many as fit in a wide one ----
+ * A card is never narrower than 20rem, so two stand side by side only where one alone would pass the 40rem a line of words reads at.
+ * The cards of a row are one height.
+ */
+:where(.kit) .kit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
+:where(.kit) .kit-cards > li { display: flex; min-width: 0; }
+:where(.kit) .kit-cards > li > * { flex: 1; min-width: 0; }
+
+/* ---- A list of files: each as a message names a file, and after it when it was written. Nothing here is pressed ---- */
+:where(.kit) .kit-files { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+:where(.kit) .kit-files > li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); min-width: 0; }
+:where(.kit) .kit-file-when { color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); }
+:where(.kit) .file-ref { display: inline-flex; align-items: center; gap: var(--space-3); max-width: 100%; padding: var(--space-2) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); }
+:where(.kit) .file-ref .icon { flex: none; color: var(--quiet); }
+:where(.kit) .file-ref-name { min-width: 0; overflow-wrap: anywhere; }
+
+/* ---- The label over what the pointer or the keyboard is on ---- */
+:where(.kit) .cx-tip { position: fixed; z-index: 5; left: 0; top: 0; padding: var(--space-1) var(--space-4); border: 1px solid var(--float-edge); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); white-space: nowrap; box-shadow: var(--float-shadow); pointer-events: none; }
+:where(.kit) .cx-tip[hidden] { display: none; }
+
+/*
+ * ---- A chart: bars over a line, the scale's two ends at the left, a name under each bar ----
+ * A bar is quiet on the page; the one under the pointer or holding the keyboard is ink, and the label over it says its name and figure.
+ */
+:where(.kit) .kit-chart { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--space-4); margin: 0; }
+:where(.kit) .kit-chart-scale { display: flex; flex-direction: column; justify-content: space-between; height: 9rem; color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-glyph); text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+:where(.kit) .kit-bars { display: flex; align-items: stretch; gap: var(--space-3); height: 9rem; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+:where(.kit) .kit-bars > li { flex: 1; min-width: 0; display: flex; }
+:where(.kit) .kit-bar { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 0; border: none; border-radius: var(--radius-small); background: none; cursor: default; }
+:where(.kit) .kit-bar:hover:not(:disabled) { background: none; }
+:where(.kit) .kit-bar > i { display: block; height: calc(var(--v) * 100%); min-height: 1px; border-radius: var(--radius-small) var(--radius-small) 0 0; background: var(--quiet); }
+:where(.kit) .kit-bar:hover > i, :where(.kit) .kit-bar:focus-visible > i { background: var(--ink); }
+:where(.kit) .kit-chart-names { grid-column: 2; display: flex; gap: var(--space-3); color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); font-variant-numeric: tabular-nums; }
+:where(.kit) .kit-chart-names > span { flex: 1; min-width: 0; overflow: hidden; text-align: center; white-space: nowrap; }
+
+/*
+ * ---- A timeline: the hours across the top, and under them a row a task, its name over its bar ----
+ * What ended is a quiet bar, what failed a brick one, and what still runs is drawn by its outline, open as its end is. A row answers the
+ * pointer and the keyboard in ink, the label says when it ran and where it stands, and a press is the page's to use.
+ */
+:where(.kit) .kit-timeline { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; }
+:where(.kit) .kit-hours { position: relative; height: calc(var(--size-caption) * var(--leading-small)); color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); font-variant-numeric: tabular-nums; }
+:where(.kit) .kit-hours > span { position: absolute; left: calc(var(--at) * 100%); white-space: nowrap; }
+:where(.kit) .kit-hours > span.mid { transform: translateX(-50%); }
+:where(.kit) .kit-hours > span.end { transform: translateX(-100%); }
+:where(.kit) .kit-spans { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+:where(.kit) .kit-span { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; padding: 0; border: none; border-radius: var(--radius-small); background: none; color: var(--quiet); font-size: var(--size-caption); line-height: var(--leading-small); text-align: start; }
+:where(.kit) .kit-span:hover:not(:disabled) { background: none; color: var(--ink); }
+:where(.kit) .kit-span:focus-visible { color: var(--ink); }
+:where(.kit) .kit-span-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:where(.kit) .kit-span-track { display: block; height: var(--space-4); border-radius: var(--radius-round); background: var(--wash); }
+:where(.kit) .kit-span-track > i { display: block; height: 100%; min-width: var(--space-2); margin-left: calc(var(--from) * 100%); width: calc((var(--to) - var(--from)) * 100%); border-radius: var(--radius-round); background: var(--quiet); }
+:where(.kit) .kit-span:hover .kit-span-track > i, :where(.kit) .kit-span:focus-visible .kit-span-track > i { background: var(--ink); }
+:where(.kit) .kit-span[data-state="failed"] .kit-span-track > i, :where(.kit) .kit-span[data-state="failed"]:hover .kit-span-track > i, :where(.kit) .kit-span[data-state="failed"]:focus-visible .kit-span-track > i { background: var(--bad); }
+:where(.kit) .kit-span[data-state="running"] .kit-span-track > i, :where(.kit) .kit-span[data-state="running"]:hover .kit-span-track > i, :where(.kit) .kit-span[data-state="running"]:focus-visible .kit-span-track > i { border: 1px solid var(--live-edge); border-right: none; border-radius: var(--radius-round) 0 0 var(--radius-round); background: var(--ground); }
+:where(.kit) .kit-span[data-state="running"]:hover .kit-span-track > i, :where(.kit) .kit-span[data-state="running"]:focus-visible .kit-span-track > i { border-color: var(--ink); }
+
+@media (pointer: coarse), not (min-width: 56rem) {
+  :where(.kit) .kit-span { min-height: var(--space-8); justify-content: center; }
+}

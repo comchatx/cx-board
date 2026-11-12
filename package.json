@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Keeps cx's reports and drafts on a board beside the chat.",
   "license": "MIT",
   "author": "ComChatX",
@@ -21,6 +21,7 @@
   },
   "files": [
     "skills",
+    "kit",
     "README.zh-CN.md"
   ],
   "scripts": {
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "1.4.0",
     "@types/node": "26.2.0",
+    "happy-dom": "21.0.4",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   }
