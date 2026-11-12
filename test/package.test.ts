@@ -38,3 +38,8 @@ it("ships its skills, the page's elements, its README in English and in Chinese 
   expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", ...skills].sort());
   expect(manifest.files).toEqual(["skills", "kit", "README.zh-CN.md"]);
 });
+
+it("the card's name is comchatx.name, the one signed on 2026-11-11", () => {
+  const field = (JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { comchatx: { name?: unknown } }).comchatx;
+  expect(field.name).toBe("Board");
+});
