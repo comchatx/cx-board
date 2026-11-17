@@ -27,7 +27,7 @@ A file on the board does not hold your turn: the seller reads it when they come 
 
 ## When a file lands
 
-When a turn of yours leaves a new file, the column opens beside the chat by itself on the tab the file landed in, unless the seller shut it that turn.
+When a turn of yours leaves a new file, the board opens nothing by itself: the tab the file landed in gets a dot until the seller opens it. A board a plugin draws with a page of its own may ask to be shown, as that plugin's skill says, and the column then opens on it.
 
 ## A page
 
