@@ -3,7 +3,7 @@ name: cx-board
 description: The seller's board, a column beside the chat that shows Markdown files as cards, or a board's page in their place. Use when the seller asks for something to be put, changed or found on the board, or when another plugin's skill names the board.
 ---
 
-The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. Where several people share a computer, each has a board of their own, and yours is `/tenant/board/<person>/`, `<person>` being the account the board is drawn for. It holds directories and nothing else: each directory is a tab, named by its directory's name, and the seller sees the tabs by name in a column beside the chat. Each Markdown file in a tab, at any depth under it, is a card: the seller sees when it was written, its title, and your words, drawn as your answers in the chat are. Anyone may leave one: you, a plugin's skill, a script. A plugin's skill names the tab it writes to.
+The board is the seller's directory under `/tenant/board/`; the computer makes it for the seller. Where several people share a computer, each has a board of their own, and yours is `/tenant/board/<person>/`, `<person>` being the account the board is drawn for. It holds directories and nothing else: each directory is a tab, named by its directory's name, and the seller sees the tabs by name in a column beside the chat. Each Markdown file in a tab, at any depth under it, is a card: the seller sees when it was written, its title, and your words. In a tab the board draws itself, your words are drawn as your answers in the chat are; a tab a plugin draws with a page of its own, such as the Inbox, draws them as that plugin's skill says. Anyone may leave one: you, a plugin's skill, a script. A plugin's skill names the tab it writes to.
 
 ## A tab
 
@@ -19,7 +19,7 @@ A file sits in its tab's directory, named `<time>-<slug>.md`, where `<time>` is 
 Your words.
 ```
 
-A file with no title is named by its file name. Your words are a few lines: the figures that matter, one reason, and where they come from. Nothing on the page marks what cannot be undone; only the file's own words say it, once, in a line of its own.
+A file with no title is named by its file name. The board reads a card's file up to 32 KiB (32,768 bytes); a larger one is drawn by its title alone, with 文件过大，无法显示。 / This file is too large to show. in place of its words. Your words are a few lines: the figures that matter, one reason, and where they come from. Nothing on the page marks what cannot be undone; only the file's own words say it, once, in a line of its own.
 
 The board shows its directories as they are. A file is yours to change, move or remove when the seller asks, and a tab is too.
 
@@ -33,7 +33,13 @@ When a turn of yours leaves a new file, the column opens beside the chat by itse
 
 A board whose folder holds `page.html` at its top is drawn as that page in a frame, in place of its cards. Over the frame, the seller sees a row saying cx made it.
 
-The page runs its own script and loads nothing from the network: its data is written in the page, or read from its own board's folder through `cxBoard`. The board passes the page its theme and language on `<html>`, as `data-theme` (`light` or `dark`) and `data-locale` (`zh` or `en`).
+The page runs its own script and reaches nothing outside its board: it loads no script, style sheet or image from an address (an image or a sound is drawn from a `data:` address only), fetches nothing from the network, opens no outside address, submits no form and downloads no file. A button that would export a file, or a link out of the page, does nothing there.
+
+A page is at most 1 MiB (1,048,576 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load., and 重试 / Try again meets the same bound. Data kept in files beside the page, in its own board's folder, does not count toward it: the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline.
+
+The board checks each bound as it reads, not as a file is written: a file written with a shell command or a script meets none of them until the seller opens the page or the tab.
+
+The board passes the page its theme and language on `<html>`, as `data-theme` (`light` or `dark`) and `data-locale` (`zh` or `en`).
 
 The ready-made elements are in the page before its own code, so a page uses them with no `<link>` or `<script>`. A page takes them by `<body class="kit">`, and is then drawn in the board's look; a page without that class is drawn as it is written. The elements are:
 
@@ -51,11 +57,11 @@ The elements carry no words: every line on the page is the page's, in the langua
 The page reaches the board through `window.cxBoard`, which the board defines:
 
 - `cxBoard.context` is `{ theme: "light" | "dark", locale: "zh" | "en", width }`, `width` in pixels; `cxBoard.on("context", fn)` hears it change, and `cxBoard.on("files", fn)` hears the board's files change.
-- `cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board; `cxBoard.read(file)` answers a file's text, at most 1 MiB.
+- `cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board, at most 2,000 files and 16 folders deep; `cxBoard.read(file)` answers one file's text, at most 1 MiB, and refuses a larger one.
 - `cxBoard.draft(text)` puts a sentence in the message box, for the seller to send as their own.
 - `cxBoard.send(text)` sends it as the seller's message, or puts it in the message box where it cannot go at that moment.
 - A draft and a send each need a press, a click or a key typed inside the page: a press gives one draft or one send, and none within five seconds of the last. Without a press the board refuses it, and the page's code cannot make one.
-- `cxBoard.write(file, text)` writes one file in the page's own board.
+- `cxBoard.write(file, text)` writes one file in the page's own board, at most 512 KiB (524,288 bytes) as UTF-8, and refuses a larger one; it does not write `page.html`.
 - `cxBoard.count(n, words)` puts a number on the board's icon, with the page's words for what it counts.
 - `cxBoard.show(name)` asks for the page's board to be opened and shown, `name` saying what changed.
 
