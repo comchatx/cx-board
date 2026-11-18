@@ -132,8 +132,11 @@
     return box;
   }
 
-  /** A file, as a message names one. */
-  const file = (name) => h("span", { class: "file-ref" }, icon("M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"), h("span", { class: "file-ref-name" }, name));
+  /**
+   * A file, as a message names one; given its path in the tree, a button the board's own script in the page takes a press on, to show the
+   * file on a tab of the board. The kit hears no press of its own.
+   */
+  const file = (name, path) => h(path === undefined ? "span" : "button", { class: "file-ref", ...(path === undefined ? {} : { type: "button", "data-cx-file": path }) }, icon("M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"), h("span", { class: "file-ref-name" }, name));
 
   window.Kit = Object.freeze({
     get lang() { return zh() ? "zh" : "en"; },

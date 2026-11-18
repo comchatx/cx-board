@@ -50,7 +50,7 @@ The ready-made elements are in the page before its own code, so a page uses them
 - a count, `<dl class="bp-figures">` of `<div class="bp-figure"><dt>` name `<dd>` figure;
 - a heading, `<h2 class="bp-head">`, and a row with one press, `<div class="bp-row">` holding `<div class="bp-words">` (`.bp-name`, `.bp-result`, `.bp-line`) and a `<button>`;
 - a list of cards, `<ul class="kit-cards">`, as many across as the width holds; the empty line, `<p class="board-empty">`;
-- from `Kit`, the elements' script: `Kit.views({ label, views, shown, change })`, a switch; `Kit.file(name)`, a file as a message names one, in `<ul class="kit-files">` with `<span class="kit-file-when">`; `Kit.chart({ label, bars, most, scale })`, a chart; `Kit.timeline({ label, hours, spans, pick })`, a timeline; `Kit.h(tag, attrs, ...children)` makes an element.
+- from `Kit`, the elements' script: `Kit.views({ label, views, shown, change })`, a switch; `Kit.file(name, path?)`, a file as a message names one, in `<ul class="kit-files">` with `<span class="kit-file-when">`, which the seller presses to see the file on a tab of the board where you give its path under `/tenant/`; `Kit.chart({ label, bars, most, scale })`, a chart; `Kit.timeline({ label, hours, spans, pick })`, a timeline; `Kit.h(tag, attrs, ...children)` makes an element.
 
 The elements carry no words: every line on the page is the page's, in the language `data-locale` names. `<div class="kit-page">` stacks them down the page. The chart's bars and the timeline's rows are one Tab stop each, the arrows move between them, and the one under the pointer or the keyboard shows its label.
 
@@ -64,6 +64,7 @@ The page reaches the board through `window.cxBoard`, which the board defines:
 - `cxBoard.write(file, text)` writes one file in the page's own board, at most 512 KiB (524,288 bytes) as UTF-8, and refuses a larger one; it does not write `page.html`.
 - `cxBoard.count(n, words)` puts a number on the board's icon, with the page's words for what it counts.
 - `cxBoard.show(name)` asks for the page's board to be opened and shown, `name` saying what changed.
+- `cxBoard.open(path)` shows the seller one file of your computer on a tab of the board, by its path under `/tenant/`; it goes only at their press, and the page learns nothing of the file.
 - `cxBoard.markdown(text)` answers the text drawn as your answers in the chat are, as HTML for a `<div class="markdown">`: bold, lists, tables, code and links, HTML in the text shown as text, no image. The text is at most 32 KiB (32,768 bytes) as UTF-8, and a larger one is refused. It needs no press. A link in it opens nothing in the page.
 - `cxBoard.save({ name, text })` hands the seller the page's text as a file named `name`; `cxBoard.save({ file })` hands them one file of the page's own board, under its own name, or under `name` where one is given. The browser saves it as any file downloaded from ComChatX. It is at most 5 MiB (5,242,880 bytes) as UTF-8, and a larger one is refused; `name` is a file name, with no folder and no leading `.`.
 

@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+body { margin: 0; }
+img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+</style></head>
+<body class="kit"><img id="file" alt=""><script>
+// A picture of the seller's computer, whole, from the bytes the board hands, each time it hands them.
+const img = document.getElementById("file");
+const TYPES = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
+let shown;
+cxBoard.on("file", (file) => {
+  const bytes = Uint8Array.from(atob(file.bytes ?? ""), (c) => c.charCodeAt(0));
+  const url = URL.createObjectURL(new Blob([bytes], { type: TYPES[file.name.split(".").pop().toLowerCase()] ?? "application/octet-stream" }));
+  img.alt = file.name;
+  img.src = url;
+  if (shown !== undefined) URL.revokeObjectURL(shown);
+  shown = url;
+});
+</script></body></html>
