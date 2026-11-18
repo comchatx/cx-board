@@ -23,7 +23,7 @@ A file with no title is named by its file name. The board reads a card's file up
 
 The board shows its directories as they are. A file is yours to change, move or remove when the seller asks, and a tab is too.
 
-A file on the board does not hold your turn: the seller reads it when they come to the board. A question asked in the turn, through pi's question box, holds it until the seller answers.
+A file on the board does not hold your turn: the seller reads it when they come to the board.
 
 ## When a file lands
 
@@ -33,9 +33,9 @@ When a turn of yours leaves a new file, the board opens nothing by itself: the t
 
 A board whose folder holds `page.html` at its top is drawn as that page in a frame, in place of its cards. Over the frame, the seller sees a row saying cx made it.
 
-The page runs its own script and reaches nothing outside its board: it loads no script, style sheet or image from an address (an image or a sound is drawn from a `data:` address only), fetches nothing from the network, opens no outside address, submits no form and downloads no file. A button that would export a file, or a link out of the page, does nothing there.
+The page runs its own script and reaches nothing outside its board: it loads no script, style sheet or image from an address (an image or a sound is drawn from a `data:` address only), fetches nothing from the network, opens no outside address, submits no form and downloads no file by itself. A link out of the page does nothing there; a file reaches the seller through `cxBoard.save`.
 
-A page is at most 1 MiB (1,048,576 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load., and 重试 / Try again meets the same bound. Data kept in files beside the page, in its own board's folder, does not count toward it: the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline.
+A page is at most 5 MiB (5,242,880 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load., and 重试 / Try again meets the same bound. Data kept in files beside the page, in its own board's folder, does not count toward it: the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline.
 
 The board checks each bound as it reads, not as a file is written: a file written with a shell command or a script meets none of them until the seller opens the page or the tab.
 
@@ -57,15 +57,36 @@ The elements carry no words: every line on the page is the page's, in the langua
 The page reaches the board through `window.cxBoard`, which the board defines:
 
 - `cxBoard.context` is `{ theme: "light" | "dark", locale: "zh" | "en", width }`, `width` in pixels; `cxBoard.on("context", fn)` hears it change, and `cxBoard.on("files", fn)` hears the board's files change.
-- `cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board, at most 2,000 files and 16 folders deep; `cxBoard.read(file)` answers one file's text, at most 1 MiB, and refuses a larger one.
+- `cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board, at most 2,000 files and 16 folders deep; `cxBoard.read(file)` answers one file's text, at most 5 MiB, and refuses a larger one.
 - `cxBoard.draft(text)` puts a sentence in the message box, for the seller to send as their own.
 - `cxBoard.send(text)` sends it as the seller's message, or puts it in the message box where it cannot go at that moment.
-- A draft and a send each need a press, a click or a key typed inside the page: a press gives one draft or one send, and none within five seconds of the last. Without a press the board refuses it, and the page's code cannot make one.
+- A draft, a send and a save each need a press, a click or a key typed inside the page: a press gives one draft, one send or one save, and none within five seconds of the last. Without a press the board refuses it, and the page's code cannot make one.
 - `cxBoard.write(file, text)` writes one file in the page's own board, at most 512 KiB (524,288 bytes) as UTF-8, and refuses a larger one; it does not write `page.html`.
 - `cxBoard.count(n, words)` puts a number on the board's icon, with the page's words for what it counts.
 - `cxBoard.show(name)` asks for the page's board to be opened and shown, `name` saying what changed.
+- `cxBoard.markdown(text)` answers the text drawn as your answers in the chat are, as HTML for a `<div class="markdown">`: bold, lists, tables, code and links, HTML in the text shown as text, no image. The text is at most 32 KiB (32,768 bytes) as UTF-8, and a larger one is refused. It needs no press. A link in it opens nothing in the page.
+- `cxBoard.save({ name, text })` hands the seller the page's text as a file named `name`; `cxBoard.save({ file })` hands them one file of the page's own board, under its own name, or under `name` where one is given. The browser saves it as any file downloaded from ComChatX. It is at most 5 MiB (5,242,880 bytes) as UTF-8, and a larger one is refused; `name` is a file name, with no folder and no leading `.`.
 
 Text is plain; a draft or a sent message is at most 2,000 characters.
+
+A press that saves, one for the page's own words and one for a file of its board, each a button beside the line it is for:
+
+```html
+<div class="bp-row">
+  <div class="bp-words"><span class="bp-name">{what the file holds}</span></div>
+  <button type="button" id="save-made">{the page's word for saving}</button>
+</div>
+<div class="bp-row">
+  <div class="bp-words"><span class="bp-name">{what the file holds}</span></div>
+  <button type="button" id="save-file">{the page's word for saving}</button>
+</div>
+<script>
+  const rows = [["Store", "Profit"], ["US", "1284"]];
+  document.getElementById("save-made").onclick = () => cxBoard.save({ name: "profit.csv", text: rows.map((row) => row.join(",")).join("\n") });
+  document.getElementById("save-file").onclick = () => cxBoard.save({ file: "data/orders.csv" });
+</script>
+```
+
 
 ## The page's names
 

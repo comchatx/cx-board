@@ -20,8 +20,8 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
   for (const said of [
     "`page.html` at its top is drawn as that page in a frame",
     "a row saying cx made it",
-    "fetches nothing from the network, opens no outside address, submits no form and downloads no file",
-    "A page is at most 1 MiB (1,048,576 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load.",
+    "fetches nothing from the network, opens no outside address, submits no form and downloads no file by itself. A link out of the page does nothing there; a file reaches the seller through `cxBoard.save`.",
+    "A page is at most 5 MiB (5,242,880 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load.",
     "the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline",
     "a file written with a shell command or a script meets none of them until the seller opens the page or the tab",
     "no `<link>` or `<script>`",
@@ -33,10 +33,12 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
     "`cxBoard.context` is `{ theme: \"light\" | \"dark\", locale: \"zh\" | \"en\", width }`",
     "`cxBoard.on(\"context\", fn)`", "`cxBoard.on(\"files\", fn)`",
     "`cxBoard.list()` answers a list of `{ file, modified, size }` for the page's own board",
-    "at most 2,000 files and 16 folders deep", "`cxBoard.read(file)` answers one file's text, at most 1 MiB, and refuses a larger one",
+    "at most 2,000 files and 16 folders deep", "`cxBoard.read(file)` answers one file's text, at most 5 MiB, and refuses a larger one",
     "`cxBoard.draft(text)` puts a sentence in the message box",
     "`cxBoard.send(text)` sends it as the seller's message, or puts it in the message box where it cannot go at that moment",
-    "A draft and a send each need a press, a click or a key typed inside the page: a press gives one draft or one send, and none within five seconds of the last. Without a press the board refuses it",
+    "A draft, a send and a save each need a press, a click or a key typed inside the page: a press gives one draft, one send or one save, and none within five seconds of the last. Without a press the board refuses it",
+    "`cxBoard.markdown(text)` answers the text drawn as your answers in the chat are, as HTML for a `<div class=\"markdown\">`", "The text is at most 32 KiB (32,768 bytes) as UTF-8, and a larger one is refused. It needs no press. A link in it opens nothing in the page.",
+    "`cxBoard.save({ name, text })` hands the seller the page's text as a file named `name`; `cxBoard.save({ file })` hands them one file of the page's own board", "It is at most 5 MiB (5,242,880 bytes) as UTF-8, and a larger one is refused; `name` is a file name, with no folder and no leading `.`.",
     "`cxBoard.write(file, text)` writes one file in the page's own board, at most 512 KiB (524,288 bytes) as UTF-8, and refuses a larger one; it does not write `page.html`",
     "`cxBoard.count(n, words)` puts a number on the board's icon, with the page's words",
     "`cxBoard.show(name)` asks for the page's board to be opened and shown",
@@ -44,8 +46,9 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
   ]) expect(skill, said).toContain(said);
 });
 
-it("tells cx, one sentence each, that a board file does not hold its turn while pi's question box does, and which board is its own on a shared computer", () => {
-  expect(skill).toContain("A file on the board does not hold your turn: the seller reads it when they come to the board. A question asked in the turn, through pi's question box, holds it until the seller answers.");
+it("tells cx, one sentence each, that a board file does not hold its turn, and which board is its own on a shared computer", () => {
+  expect(skill).toContain("A file on the board does not hold your turn: the seller reads it when they come to the board.");
+  expect(skill).not.toContain("question box");
   expect(skill).toContain("Where several people share a computer, each has a board of their own, and yours is `/tenant/board/<person>/`, `<person>` being the account the board is drawn for.");
   for (const rule of ["must not", "never ", "do not", "don't"]) expect(skill.toLowerCase(), rule).not.toContain(rule);
 });
@@ -53,4 +56,20 @@ it("tells cx, one sentence each, that a board file does not hold its turn while 
 it("tells cx which tabs draw a card's words as the chat does, and the size the board reads a card's file to", () => {
   expect(skill).toContain("In a tab the board draws itself, your words are drawn as your answers in the chat are; a tab a plugin draws with a page of its own, such as the Inbox, draws them as that plugin's skill says.");
   expect(skill).toContain("The board reads a card's file up to 32 KiB (32,768 bytes); a larger one is drawn by its title alone");
+});
+
+it("gives one example of a press that saves, in the kit's own button beside its line, handing the seller the page's words and a file of its board", async () => {
+  const { Window } = await import("happy-dom");
+  const example = /A press that saves[^\n]*\n\n```html\n([\s\S]*?)\n```/.exec(skill)?.[1];
+  expect(example).toBeDefined();
+  const window = new Window({ settings: { enableJavaScriptEvaluation: true } });
+  const saved: unknown[] = [];
+  Object.assign(window, { cxBoard: { save: (given: unknown) => { saved.push(given); return Promise.resolve("saved"); } } });
+  window.document.body.className = "kit";
+  window.document.body.innerHTML = example!.replace(/<script>[\s\S]*<\/script>/, "");
+  window.eval(/<script>([\s\S]*)<\/script>/.exec(example!)![1]!);
+  expect([...window.document.querySelectorAll(".bp-row")].map((row) => [row.querySelector(".bp-words") !== null, row.querySelector("button")?.getAttribute("type")])).toEqual([[true, "button"], [true, "button"]]);
+  for (const button of window.document.querySelectorAll(".bp-row button")) (button as unknown as { click: () => void }).click();
+  expect(saved).toEqual([{ name: "profit.csv", text: "Store,Profit\nUS,1284" }, { file: "data/orders.csv" }]);
+  await window.happyDOM.close();
 });
