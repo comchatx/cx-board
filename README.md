@@ -1,4 +1,4 @@
-Reports, findings and drafts cx leaves for later go on a board beside the chat, opened on the tab where each lands. Have cx add tabs, such as one per store. cx-board-tasks' to-dos and cx-subagents' cards go there too.
+Reports, findings and drafts cx leaves for later go on a board beside the chat. Have cx add tabs, such as one per store. With [Board Inbox](https://www.npmjs.com/package/@comchatx/cx-board-tasks), your Inbox is on the board too, and so are [cx Helpers](https://www.npmjs.com/package/@comchatx/cx-subagents)' cards.
 
 Some things you can ask:
 

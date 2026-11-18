@@ -1,4 +1,4 @@
-cx 留给你以后再看的报告、发现和草稿放在对话旁的看板上，有新内容时，看板会打开到那一页。你可以让 cx 分页，比如每个店铺一页。cx-board-tasks 的待办、cx-subagents 的后台工作卡片也放在这里。
+cx 留给你以后再看的报告、发现和草稿放在对话旁的看板上。你可以让 cx 分页，比如每个店铺一页。装上[看板收件箱](https://www.npmjs.com/package/@comchatx/cx-board-tasks)后，收件箱也在看板上；[cx 帮手](https://www.npmjs.com/package/@comchatx/cx-subagents)的后台工作卡片也放在这里。
 
 你可以这样问：
 
