@@ -21,6 +21,8 @@ Your words.
 
 A file with no title is named by its file name. The board reads a card's file up to 32 KiB (32,768 bytes); a larger one is drawn by its title alone, with 文件过大，无法显示。 / This file is too large to show. in place of its words. Your words are a few lines: the figures that matter, one reason, and where they come from. Nothing on the page marks what cannot be undone; only the file's own words say it, once, in a line of its own.
 
+A card may say how urgent it is by `level` in its front matter: `1` is 常规 / Routine, `2` 加急 / Urgent and `3` 特急 / Very urgent. A card without it is 常规 / Routine. Its row in the chat carries the level's mark.
+
 The board shows its directories as they are. A file is yours to change, move or remove when the seller asks, and a tab is too.
 
 A file on the board does not hold your turn: the seller reads it when they come to the board.
@@ -50,7 +52,7 @@ The ready-made elements are in the page before its own code, so a page uses them
 - a count, `<dl class="bp-figures">` of `<div class="bp-figure"><dt>` name `<dd>` figure;
 - a heading, `<h2 class="bp-head">`, and a row with one press, `<div class="bp-row">` holding `<div class="bp-words">` (`.bp-name`, `.bp-result`, `.bp-line`) and a `<button>`;
 - a list of cards, `<ul class="kit-cards">`, as many across as the width holds; the empty line, `<p class="board-empty">`;
-- from `Kit`, the elements' script: `Kit.views({ label, views, shown, change })`, a switch; `Kit.file(name, path?)`, a file as a message names one, in `<ul class="kit-files">` with `<span class="kit-file-when">`, which the seller presses to see the file on a tab of the board where you give its path under `/tenant/`; `Kit.chart({ label, bars, most, scale })`, a chart; `Kit.timeline({ label, hours, spans, pick })`, a timeline; `Kit.h(tag, attrs, ...children)` makes an element.
+- from `Kit`, the elements' script: `Kit.views({ label, views, shown, change })`, a switch; `Kit.file(name, path?)`, a file as a message names one, in `<ul class="kit-files">` with `<span class="kit-file-when">`, which the seller presses to see the file on a tab of the board where you give its path under `/tenant/`; `Kit.chart({ label, bars, most, scale })`, a chart; `Kit.timeline({ label, hours, spans, pick })`, a timeline; `Kit.questions({ form, words, under, answer })`, questions with options in the platform's form (`comchatx.options/1` or `comchatx.confirm/1`), asked one at a time, handing `answer` the seller's answers in that form; `Kit.h(tag, attrs, ...children)` makes an element.
 
 The elements carry no words: every line on the page is the page's, in the language `data-locale` names. `<div class="kit-page">` stacks them down the page. The chart's bars and the timeline's rows are one Tab stop each, the arrows move between them, and the one under the pointer or the keyboard shows its label.
 
