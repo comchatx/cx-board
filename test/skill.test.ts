@@ -73,3 +73,9 @@ it("gives one example of a press that saves, in the kit's own button beside its 
   expect(saved).toEqual([{ name: "profit.csv", text: "Store,Profit\nUS,1284" }, { file: "data/orders.csv" }]);
   await window.happyDOM.close();
 });
+
+it("states a card's urgency as one fact of its front matter, three levels, and none that makes a thing urgent", () => {
+  expect(skill).toContain("A card may say how urgent it is by `level` in its front matter: `1` is 常规 / Routine, `2` 加急 / Urgent and `3` 特急 / Very urgent. A card without it is 常规 / Routine.");
+  expect(skill).toContain("`Kit.questions({ form, words, under, answer })`, questions with options in the platform's form (`comchatx.options/1` or `comchatx.confirm/1`)");
+  for (const rule of ["when something is urgent", "use level", "should be urgent"]) expect(skill, rule).not.toContain(rule);
+});
