@@ -114,3 +114,112 @@ it("gives the chart's bars and the timeline's rows one Tab stop each, the arrows
   document.documentElement.dataset.locale = "zh";
   expect(one()).toBe("a，1");
 });
+
+it("draws a file as a message names one, and given its path a button that carries it for the board's own script, hearing no press itself", () => {
+  const { window, load } = page("");
+  const Kit = load() as unknown as { file: (name: string, path?: string) => HTMLElement };
+  const named = Kit.file("sales.csv");
+  expect([named.tagName, named.getAttribute("data-cx-file"), named.textContent]).toEqual(["SPAN", null, "sales.csv"]);
+  const pressed: unknown[] = [];
+  (window as unknown as { cxBoard: unknown }).cxBoard = { open: (path: string) => pressed.push(path) };
+  const box = Kit.file("sales.csv", "reports/sales.csv");
+  expect([box.tagName, box.getAttribute("type"), box.getAttribute("data-cx-file"), box.className, box.textContent]).toEqual(["BUTTON", "button", "reports/sales.csv", "file-ref", "sales.csv"]);
+  (box as unknown as HTMLButtonElement).click();
+  expect(pressed).toEqual([]);
+});
+
+type Asked = { form: unknown; words: unknown; under?: HTMLElement; answer: (value: unknown) => void };
+const WORDS = {
+  other: "Another answer", otherTo: (question: string) => `Another answer to ${question}`, submit: "Submit", next: "Next question", previous: "Previous question",
+  position: (n: number, total: number) => `${n} of ${total}`, positionSaid: (n: number, total: number) => `Question ${n} of ${total}:`, skip: "Skip", yes: "Yes", no: "No",
+};
+const SHIP = { words: "How should the restock go?", options: [{ name: "By sea", line: "About 30 days" }, { name: "By air" }] };
+const BOXES = { words: "Which colours?", several: true, options: [{ name: "Blue" }, { name: "Red" }, { name: "Green" }] };
+function asking(form: unknown, under?: (document: Document) => HTMLElement) {
+  const { window, document, load } = page("", "kit");
+  const Kit = load() as unknown as { questions: (spec: Asked) => HTMLElement };
+  const said: unknown[] = [];
+  const box = Kit.questions({ form, words: WORDS, ...(under === undefined ? {} : { under: under(document) }), answer: (value) => said.push(value) });
+  document.body.append(box);
+  const press = (selector: string) => (box.querySelector(selector) as HTMLButtonElement).click();
+  const named = (name: string) => [...box.querySelectorAll("button")].find((one) => one.textContent === name) as HTMLButtonElement | undefined;
+  const pick = (at: number) => { const input = box.querySelectorAll(".kit-option > input")[at] as unknown as { checked: boolean; dispatchEvent: (event: unknown) => void }; input.checked = !input.checked; input.dispatchEvent(new window.Event("change")); };
+  return { window, document, box, said, press, named, pick };
+}
+
+it("asks one question as the chat's option card does, the page's words on it, and hands the choice in the platform's form once, taking no press after", () => {
+  const one = asking({ form: "comchatx.options/1", ask: "ship", questions: [SHIP] }, (document) => Object.assign(document.createElement("p"), { className: "entry-meta", textContent: "07:48" }));
+  expect(one.box.querySelector("h3.entry-title")?.textContent).toBe(SHIP.words);
+  expect(one.box.children[1]?.textContent).toBe("07:48");
+  expect(one.box.querySelector(".kit-options")?.getAttribute("role")).toBe("radiogroup");
+  expect([...one.box.querySelectorAll(".kit-option")].map((row) => row.textContent)).toEqual(["By seaAbout 30 days", "By air", "Another answer"]);
+  expect([...one.box.querySelectorAll(".kit-option > input")].map((input) => input.getAttribute("type"))).toEqual(["radio", "radio", "radio"]);
+  // One question: no place among several and no 跳过; the press that sends waits for a choice.
+  expect([one.box.querySelector(".kit-pager"), one.named("Skip")]).toEqual([null, undefined]);
+  expect(one.named("Submit")?.disabled).toBe(true);
+  one.pick(1);
+  expect(one.named("Submit")?.disabled).toBe(false);
+  one.named("Submit")!.click();
+  expect(one.said).toEqual([{ form: "comchatx.options/1", answers: [{ chosen: ["By air"] }] }]);
+  expect([...one.box.querySelectorAll("button, input")].every((control) => (control as HTMLButtonElement).disabled)).toBe(true);
+  one.named("Submit")!.click();
+  expect(one.said).toHaveLength(1);
+});
+
+it("takes the seller's own words in a field under its row, sent on Enter, and boxes where several may be chosen, in the options' order", () => {
+  const own = asking({ form: "comchatx.options/1", ask: "ship", questions: [SHIP] });
+  own.pick(2);
+  const field = own.box.querySelector(".kit-option-own > input.entry-field") as unknown as { value: string; getAttribute: (name: string) => string | null; dispatchEvent: (event: unknown) => void };
+  expect(field.getAttribute("aria-label")).toBe(`Another answer to ${SHIP.words}`);
+  expect(own.document.activeElement).toBe(field);
+  expect(own.named("Submit")?.disabled).toBe(true);
+  field.value = "  Rail  ";
+  field.dispatchEvent(new own.window.Event("input"));
+  expect(own.named("Submit")?.disabled).toBe(false);
+  field.dispatchEvent(new own.window.KeyboardEvent("keydown", { key: "Enter" }));
+  expect(own.said).toEqual([{ form: "comchatx.options/1", answers: [{ chosen: [], own: "Rail" }] }]);
+
+  const boxes = asking({ form: "comchatx.options/1", ask: "colours", questions: [{ ...BOXES, own: false }] });
+  expect(boxes.box.querySelector(".kit-options")?.getAttribute("role")).toBe("group");
+  expect([...boxes.box.querySelectorAll(".kit-option > input")].map((input) => input.getAttribute("type"))).toEqual(["checkbox", "checkbox", "checkbox"]);
+  boxes.pick(2); boxes.pick(0); boxes.pick(1); boxes.pick(1);
+  boxes.named("Submit")!.click();
+  expect(boxes.said).toEqual([{ form: "comchatx.options/1", answers: [{ chosen: ["Blue", "Green"] }] }]);
+});
+
+it("asks several questions one at a time with its place among them, 跳过 at the foot, and keeps each choice as the seller steps back and on", () => {
+  const four = asking({ form: "comchatx.options/1", ask: "plan", questions: [SHIP, BOXES, { words: "When?", options: [{ name: "Today" }, { name: "Monday" }] }, { words: "Tell the supplier?", options: [{ name: "Yes" }, { name: "Not yet" }] }] });
+  const title = () => four.box.querySelector("h3.entry-title")?.textContent;
+  expect(title()).toBe(`Question 1 of 4: ${SHIP.words}`);
+  expect(four.box.querySelector(".kit-pager")?.textContent).toBe("1 of 4");
+  expect([...four.box.querySelectorAll(".kit-step")].map((step) => [step.getAttribute("aria-label"), (step as HTMLButtonElement).disabled])).toEqual([["Previous question", true], ["Next question", false]]);
+  expect(four.named("Next question")?.disabled).toBe(true);
+  four.pick(0);
+  four.named("Next question")!.click();
+  expect(title()).toBe(`Question 2 of 4: ${BOXES.words}`);
+  expect(four.document.activeElement?.getAttribute("data-focus")).toBe("o0");
+  four.pick(1);
+  four.press('.kit-step[data-focus="previous"]');
+  expect((four.box.querySelectorAll(".kit-option > input")[0] as unknown as { checked: boolean }).checked).toBe(true);
+  four.press('.kit-step[data-focus="next"]');
+  expect((four.box.querySelectorAll(".kit-option > input")[1] as unknown as { checked: boolean }).checked).toBe(true);
+  four.named("Next question")!.click();
+  four.named("Skip")!.click();
+  expect(title()).toBe("Question 4 of 4: Tell the supplier?");
+  expect(four.named("Submit")).toBeDefined();
+  four.named("Skip")!.click();
+  expect(four.said).toEqual([{ form: "comchatx.options/1", answers: [{ chosen: ["By sea"] }, { chosen: ["Red"] }, null, null] }]);
+});
+
+it("asks a proposal for a yes or a no, its message under the page's line, and hands on which", () => {
+  const yes = asking({ form: "comchatx.confirm/1", ask: "price", title: "Lower the blue kettle to $24.99?", message: "About 7 days of stock at that price." });
+  expect(yes.box.querySelector("h3.entry-title")?.textContent).toBe("Lower the blue kettle to $24.99?");
+  expect(yes.box.querySelector(".kit-asked-message")?.textContent).toBe("About 7 days of stock at that price.");
+  expect([...yes.box.querySelectorAll(".kit-asked-foot > button")].map((one) => [one.textContent, one.className])).toEqual([["No", ""], ["Yes", "primary"]]);
+  yes.named("Yes")!.click();
+  expect(yes.said).toEqual([{ form: "comchatx.confirm/1", confirmed: true }]);
+  const no = asking({ form: "comchatx.confirm/1", ask: "price", title: "Lower it?" });
+  expect(no.box.querySelector(".kit-asked-message")).toBeNull();
+  no.named("No")!.click();
+  expect(no.said).toEqual([{ form: "comchatx.confirm/1", confirmed: false }]);
+});

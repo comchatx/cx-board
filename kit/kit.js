@@ -1,7 +1,7 @@
 // The elements' script: what the board puts into a page, after `kit.css` and before the page's own code. It gives the elements that need
-// a script, a chart, a timeline and a switch, with what a pointer and a keyboard do on them, and a file as a message names one. A page
-// reaches all of it through `Kit`. It carries no words: every line it draws is the page's. Nothing here speaks across the frame's edge
-// or loads anything. Loading it defines `Kit` and nothing else: it
+// a script, a chart, a timeline, a switch and questions with options, with what a pointer and a keyboard do on them, and a file as a
+// message names one. A page reaches all of it through `Kit`. It carries no words: every line it draws is the page's. Nothing here speaks
+// across the frame's edge or loads anything. Loading it defines `Kit` and nothing else: it
 // touches no element and hears no event until the page makes an element with it, and its rules in `kit.css` hold only under `.kit`.
 (() => {
   "use strict";
@@ -132,11 +132,89 @@
     return box;
   }
 
-  /** A file, as a message names one. */
-  const file = (name) => h("span", { class: "file-ref" }, icon("M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"), h("span", { class: "file-ref-name" }, name));
+  /**
+   * A file, as a message names one; given its path in the tree, a button the board's own script in the page takes a press on, to show the
+   * file on a tab of the board. The kit hears no press of its own.
+   */
+  const file = (name, path) => h(path === undefined ? "span" : "button", { class: "file-ref", ...(path === undefined ? {} : { type: "button", "data-cx-file": path }) }, icon("M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"), h("span", { class: "file-ref-name" }, name));
+
+  /**
+   * Questions with options, as the chat's option card asks them, for a card of the page's. `form` is the platform's: an option form
+   * (`comchatx.options/1`: `questions`, each `words`, `options` of `{ name, line? }`, `several: true` where more than one may be chosen,
+   * `own: false` where the seller may not write their own) or a confirm form (`comchatx.confirm/1`: `title`, `message?`). The question in
+   * front is the element's heading; `under` stands under it, before the options. `words` are the page's: `other`, `otherTo(question)`,
+   * `submit`, `next`, `previous`, `position(n, total)`, `positionSaid(n, total)`, `skip`, `yes`, `no`. Several questions are asked one at
+   * a time, Skip at the foot of each. The last press hands `answer` the seller's answers in the platform's form, `{ form, answers }`, an
+   * answer a question in order, `{ chosen, own? }` or `null` for one skipped, or `{ form, confirmed }`, and the element takes no press
+   * after it. It keeps what was chosen for as long as it lives, so a page that keeps the element keeps the choices across its draws.
+   */
+  function questions({ form, words, under, answer }) {
+    const box = h("div", { class: "kit-asked" });
+    const id = `kit-asked-${++asked}`;
+    const confirm = form.form === "comchatx.confirm/1";
+    const all = confirm ? [] : form.questions;
+    const rows = all.map(() => ({ picked: new Set(), other: false, typed: "" }));
+    let at = 0;
+    let sent = false;
+    const wrote = (one) => one.other && one.typed.trim() !== "";
+    const has = (one) => one.picked.size > 0 || wrote(one);
+    const answerOf = (question, one) => (!has(one) ? null : { chosen: [...one.picked].sort((a, b) => a - b).map((n) => question.options[n].name), ...(wrote(one) ? { own: one.typed.trim() } : {}) });
+    const send = (value) => { sent = true; draw(); answer?.(value); };
+    const submit = () => send({ form: form.form, answers: all.map((question, n) => answerOf(question, rows[n])) });
+    const turn = (by, focus) => { at = Math.max(0, Math.min(at + by, all.length - 1)); draw(focus); };
+    const step = (by, glyph, word, focus) => h("button", { type: "button", class: "kit-step", "aria-label": word, "data-focus": focus, disabled: sent || at + by < 0 || at + by >= all.length, onclick: () => turn(by, focus) }, icon(glyph));
+
+    function asking() {
+      const question = all[at], one = rows[at], last = at >= all.length - 1, kind = question.several === true ? "checkbox" : "radio";
+      const choice = (checked, focus, change) => { const input = h("input", { type: kind, name: `${id}-${at}`, "data-focus": focus, disabled: sent, onchange: change }); input.checked = checked; return input; };
+      const options = question.options.map((option, n) => h("label", { class: "kit-option" },
+        choice(one.picked.has(n), `o${n}`, () => { if (question.several === true) { if (!one.picked.delete(n)) one.picked.add(n); } else { one.picked = new Set([n]); one.other = false; } draw(`o${n}`); }),
+        h("span", { class: "kit-option-words", dir: "auto" }, h("span", {}, option.name), option.line && h("small", {}, option.line))));
+      const main = h("button", { type: "button", class: "primary", "data-focus": "main", disabled: sent || !has(one), onclick: () => { if (last) submit(); else turn(1, "main"); } }, last ? words.submit : words.next);
+      const own = one.other && h("input", { type: "text", class: "entry-field", dir: "auto", autocomplete: "off", "data-focus": "own", disabled: sent, value: one.typed, "aria-label": words.otherTo(question.words),
+        oninput: (event) => { one.typed = event.target.value; main.disabled = !has(one); },
+        onkeydown: (event) => { if (event.key === "Enter" && !event.isComposing && has(one)) { if (last) submit(); else turn(1, "main"); } } });
+      const other = question.own !== false && h("div", { class: "kit-option-own" },
+        h("label", { class: "kit-option" }, choice(one.other, "other", (event) => { one.other = event.target.checked; if (one.other && question.several !== true) one.picked = new Set(); draw(one.other ? "own" : "other"); }), h("span", { class: "kit-option-words" }, h("span", {}, words.other))),
+        own);
+      const several = all.length > 1;
+      return [
+        h("h3", { class: "entry-title", id: `${id}-q`, dir: "auto" }, several && h("span", { class: "kit-unseen" }, `${words.positionSaid(at + 1, all.length)} `), question.words),
+        under,
+        h("div", { class: "kit-options", role: question.several === true ? "group" : "radiogroup", "aria-labelledby": `${id}-q` }, options, other),
+        h("div", { class: "kit-asked-foot" },
+          several && h("span", { class: "kit-pager" }, step(-1, "M14.5 6l-6 6l6 6", words.previous, "previous"), h("span", { "aria-hidden": "true" }, words.position(at + 1, all.length)), step(1, "M9.5 6l6 6l-6 6", words.next, "next")),
+          several && h("button", { type: "button", "data-focus": "skip", disabled: sent, onclick: () => { rows[at] = { picked: new Set(), other: false, typed: "" }; if (last) submit(); else turn(1, "skip"); } }, words.skip),
+          main)];
+    }
+    function confirming() {
+      const press = (yes) => h("button", { type: "button", class: yes ? "primary" : undefined, "data-focus": yes ? "yes" : "no", disabled: sent, onclick: () => send({ form: form.form, confirmed: yes }) }, yes ? words.yes : words.no);
+      return [
+        h("h3", { class: "entry-title", dir: "auto" }, form.title),
+        under,
+        form.message && h("p", { class: "kit-asked-message", dir: "auto" }, form.message),
+        h("div", { class: "kit-asked-foot" }, press(false), press(true))];
+    }
+    function draw(focus) {
+      const had = focus ?? (box.contains(document.activeElement) ? document.activeElement.dataset.focus : undefined);
+      box.replaceChildren(...(confirm ? confirming() : asking()).filter((one) => one !== undefined && one !== null && one !== false));
+      if (had === undefined) return;
+      const to = held(box, had);
+      // A press that waits for a choice cannot hold the keyboard: it goes to the question's first option.
+      (to === undefined || to.disabled ? held(box, "o0") : to)?.focus();
+    }
+    draw();
+    return box;
+  }
+  let asked = 0;
+  /** The element under `node` that holds the keyboard by the name given, found among the questionnaire's own elements. */
+  function held(node, name) {
+    for (const child of node.children) { if (child.dataset.focus === name) return child; const found = held(child, name); if (found !== undefined) return found; }
+    return undefined;
+  }
 
   window.Kit = Object.freeze({
     get lang() { return zh() ? "zh" : "en"; },
-    h, icon, chart, timeline, views, file,
+    h, icon, chart, timeline, views, file, questions,
   });
 })();

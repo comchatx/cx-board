@@ -2,7 +2,7 @@
  * The ready-made elements a board's page is built from. The board puts this file and `kit.js` into a page before the page's own code,
  * and the page is then drawn in ComChatX's look whoever wrote it: a card (`.entry`), a button in its three looks (`button`,
  * `button.primary`, `button:disabled`), a field (`.entry-field`), a table (`.markdown table`), a count (`.bp-figures`), a switch
- * (`.board-views`, made by `Kit.views`), a row with one press (`.bp-row`), a heading (`.bp-head`), a list of cards (`.kit-cards`), a list
+ * (`.board-views`, made by `Kit.views`), questions with options (`Kit.questions`), a row with one press (`.bp-row`), a heading (`.bp-head`), a list of cards (`.kit-cards`), a list
  * of files (`.kit-files`, each made by `Kit.file`), the empty line (`.board-empty`), a chart (`Kit.chart`) and a timeline
  * (`Kit.timeline`). Every colour, face, size, space and radius is a custom property the board sets on the page's `:root`
  * (`kit/theme.json` names each); this file sets none of them and fetches nothing. Each rule is under `.kit`, which a page puts on its
@@ -125,6 +125,8 @@ body.kit { margin: 0; }
 :where(.kit) .file-ref { display: inline-flex; align-items: center; gap: var(--space-3); max-width: 100%; padding: var(--space-2) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); }
 :where(.kit) .file-ref .icon { flex: none; color: var(--quiet); }
 :where(.kit) .file-ref-name { min-width: 0; overflow-wrap: anywhere; }
+:where(.kit) button.file-ref { text-align: left; cursor: pointer; }
+:where(.kit) button.file-ref:hover { background: var(--float-hover); }
 
 /* ---- The label over what the pointer or the keyboard is on ---- */
 :where(.kit) .cx-tip { position: fixed; z-index: 5; left: 0; top: 0; padding: var(--space-1) var(--space-4); border: 1px solid var(--float-edge); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); white-space: nowrap; box-shadow: var(--float-shadow); pointer-events: none; }
@@ -170,3 +172,31 @@ body.kit { margin: 0; }
 @media (pointer: coarse), not (min-width: 56rem) {
   :where(.kit) .kit-span { min-height: var(--space-8); justify-content: center; }
 }
+
+/*
+ * ---- Questions with options: the chat's option card in a card's sizes ----
+ * The question is the heading, what the page puts under it follows, then the options in one box, a line between two, a ring before each
+ * where one is chosen and a box where several are; the seller's own answer is the last row, its field under it once chosen. At the foot,
+ * the place among several questions with its two steps at the left, then Skip and the press that goes on.
+ */
+:where(.kit) .kit-asked { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+:where(.kit) .kit-asked > * { margin: 0; }
+:where(.kit) .kit-asked > .entry-title + * { margin-top: calc(var(--space-2) - var(--space-4)); }
+:where(.kit) .kit-asked-message { overflow-wrap: anywhere; }
+:where(.kit) .kit-options { display: flex; flex-direction: column; min-width: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); }
+:where(.kit) .kit-options > * + * { border-top: 1px solid var(--line); }
+:where(.kit) .kit-option { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-4) var(--space-5); cursor: pointer; }
+:where(.kit) .kit-option > input { appearance: none; position: relative; flex: none; width: var(--space-6); height: var(--space-6); margin: calc((1lh - var(--space-6)) / 2) 0 0; padding: 0; border: 1px solid var(--edge); border-radius: var(--radius-small); background: var(--ground); cursor: pointer; }
+:where(.kit) .kit-option > input[type="radio"] { border-radius: var(--radius-round); }
+:where(.kit) .kit-option > input:checked { border-color: var(--ink); background: var(--ink); }
+:where(.kit) .kit-option > input[type="radio"]:checked { box-shadow: inset 0 0 0 calc(var(--space-2) - 1px) var(--ink), inset 0 0 0 var(--space-6) var(--raised); }
+:where(.kit) .kit-option > input[type="checkbox"]:checked::after { content: ""; position: absolute; left: 30%; top: 8%; width: 30%; height: 58%; border: solid var(--raised); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+:where(.kit) .kit-option-words { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+:where(.kit) .kit-option-words > small { color: var(--quiet); font-size: var(--size-small); line-height: var(--leading-small); }
+:where(.kit) .kit-option-own > .entry-field { display: block; width: calc(100% - 2 * var(--space-5) - var(--space-6) - var(--space-4)); margin: 0 var(--space-5) var(--space-4) calc(var(--space-5) + var(--space-6) + var(--space-4)); }
+:where(.kit) .kit-asked-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-4); }
+:where(.kit) .kit-pager { display: inline-flex; align-items: center; gap: var(--space-1); margin-right: auto; color: var(--quiet); font-variant-numeric: tabular-nums; }
+:where(.kit) .kit-step { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--space-7); height: var(--space-7); padding: 0; border: none; border-radius: var(--radius-round); background: none; color: var(--quiet); }
+:where(.kit) .kit-step:hover:not(:disabled) { background: var(--hover); color: var(--ink); }
+:where(.kit) .kit-step:disabled { border: none; background: none; color: var(--line); }
+:where(.kit) .kit-unseen { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
