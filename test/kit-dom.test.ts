@@ -114,3 +114,16 @@ it("gives the chart's bars and the timeline's rows one Tab stop each, the arrows
   document.documentElement.dataset.locale = "zh";
   expect(one()).toBe("a，1");
 });
+
+it("draws a file as a message names one, and given its path a button that carries it for the board's own script, hearing no press itself", () => {
+  const { window, load } = page("");
+  const Kit = load() as unknown as { file: (name: string, path?: string) => HTMLElement };
+  const named = Kit.file("sales.csv");
+  expect([named.tagName, named.getAttribute("data-cx-file"), named.textContent]).toEqual(["SPAN", null, "sales.csv"]);
+  const pressed: unknown[] = [];
+  (window as unknown as { cxBoard: unknown }).cxBoard = { open: (path: string) => pressed.push(path) };
+  const box = Kit.file("sales.csv", "reports/sales.csv");
+  expect([box.tagName, box.getAttribute("type"), box.getAttribute("data-cx-file"), box.className, box.textContent]).toEqual(["BUTTON", "button", "reports/sales.csv", "file-ref", "sales.csv"]);
+  (box as unknown as HTMLButtonElement).click();
+  expect(pressed).toEqual([]);
+});

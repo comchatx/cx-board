@@ -125,6 +125,8 @@ body.kit { margin: 0; }
 :where(.kit) .file-ref { display: inline-flex; align-items: center; gap: var(--space-3); max-width: 100%; padding: var(--space-2) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); }
 :where(.kit) .file-ref .icon { flex: none; color: var(--quiet); }
 :where(.kit) .file-ref-name { min-width: 0; overflow-wrap: anywhere; }
+:where(.kit) button.file-ref { text-align: left; cursor: pointer; }
+:where(.kit) button.file-ref:hover { background: var(--float-hover); }
 
 /* ---- The label over what the pointer or the keyboard is on ---- */
 :where(.kit) .cx-tip { position: fixed; z-index: 5; left: 0; top: 0; padding: var(--space-1) var(--space-4); border: 1px solid var(--float-edge); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); white-space: nowrap; box-shadow: var(--float-shadow); pointer-events: none; }
