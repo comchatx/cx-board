@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.3.4",
+  "version": "0.3.6",
   "description": "Keeps cx's reports and drafts on a board beside the chat.",
   "license": "MIT",
   "author": "ComChatX",
