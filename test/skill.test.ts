@@ -58,38 +58,56 @@ it("tells cx which tabs draw a card's words as the chat does, and the size the b
   expect(skill).toContain("The board reads a card's file up to 32 KiB (32,768 bytes); a larger one is drawn by its title alone");
 });
 
-it("says how a page gets its height: the frame takes the page's own and the board scrolls it, and a root sized to its window reads another", () => {
+it("says how a page gets its height: the frame takes the root's drawn height up to its cap, the board's height may stand under a short page, a root sized to its window reads that window, and a kept height stays until it is read again", () => {
   for (const said of [
-    "The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, and the board scrolls it.",
-    "A page whose root takes its height from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) hands the frame the window's height instead of its own",
-    "A page that reads its window's height once keeps it until it is reloaded, unless it hears `resize`.",
+    "The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, up to 100,000 px, and the board scrolls it.",
+    "A page in ordinary flow is drawn whole up to that height; a taller one scrolls inside itself as well as in the board.",
+    "A page shorter than the board may stand in a frame as tall as the board under the row.",
+    "A root whose height comes from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) is drawn at that window's height, which the frame takes: the board's height under the row, or 0, and 0 while the board is closed.",
+    "A height the page's code reads from its window and keeps stays as it was read until that code reads it again, at `resize` or after a reload.",
   ]) expect(skill, said).toContain(said);
+  expect(skill).not.toContain("at any length");
 });
 
-it("gives one whole page to start from, in the kit's elements and its flow: every row of a file beside it read with cxBoard.read, a count, and a press that saves the page's words and one that saves the file", async () => {
+/** The whole page of the skill's example, drawn in happy-dom with the kit's own script, `cxBoard.read` answering `csv`. */
+async function drawExample(csv: string) {
   const { Window } = await import("happy-dom");
   const example = /A whole `page.html`[^\n]*\n\n```html\n([\s\S]*?)\n```/.exec(skill)?.[1];
   expect(example).toBeDefined();
-  expect(example).toMatch(/^<!doctype html>\n<html>[\s\S]*<\/html>$/);
-  expect(example).not.toMatch(/100vh|height:\s*100%|innerHeight|<link|<script src/);
   const window = new Window({ settings: { enableJavaScriptEvaluation: true } });
-  const csv = ["SKU,Units", ...Array.from({ length: 3000 }, (_, n) => `B0${n},${n * 3}`)].join("\n");
-  const read: string[] = [], saved: unknown[] = [];
+  const read: string[] = [], saved: unknown[] = [], errors: unknown[] = [];
   let ready!: () => void;
   const drawn = new Promise<void>((done) => { ready = done; });
   Object.assign(window, { cxBoard: { read: (file: string) => { read.push(file); return Promise.resolve(csv).finally(() => setTimeout(ready)); }, save: (given: unknown) => { saved.push(given); return Promise.resolve("saved"); } } });
+  window.addEventListener("unhandledrejection", (event) => errors.push((event as unknown as { reason: unknown }).reason));
+  // The most nodes any one append is handed: a row each, never every row as arguments of one call.
+  let most = 0;
+  const append = window.Element.prototype.append;
+  window.Element.prototype.append = function (this: unknown, ...nodes: unknown[]) { most = Math.max(most, nodes.length); return append.apply(this, nodes as never); };
   window.eval(readFileSync(join(ROOT, "kit", "kit.js"), "utf8"));
   window.document.documentElement.dataset["locale"] = "en";
   window.document.body.className = "kit";
   window.document.body.innerHTML = /<body class="kit">([\s\S]*?)<script>/.exec(example!)![1]!;
   window.eval(/<script>([\s\S]*)<\/script>/.exec(example!)![1]!);
   await drawn;
+  return { example: example!, window, document: window.document, read, saved, errors, most };
+}
+
+it("gives one whole page to start from, in the kit's elements and its flow: every row of a file beside it read with cxBoard.read, a count, and a press that saves the page's words and one that saves the file, each row appended on its own", async () => {
+  const csv = ["SKU,Units", ...Array.from({ length: 3000 }, (_, n) => `B0${n},${n * 3}`)].join("\n");
+  const { example, window, document, read, saved, errors, most } = await drawExample(csv);
+  expect([errors, most]).toEqual([[], 1]);
+  expect(example).toMatch(/^<!doctype html>\n<html>[\s\S]*<\/html>$/);
+  expect(example).not.toMatch(/100vh|height:\s*100%|innerHeight|<link|<script src/);
   expect(read).toEqual(["data/orders.csv"]);
-  expect(window.document.querySelectorAll(".kit-page > .bp-head, .kit-page > .bp-figures, .kit-page > .bp-table, .kit-page > .bp-row").length).toBe(5);
-  expect(window.document.querySelectorAll(".bp-table tbody tr").length).toBe(3000);
-  expect(window.document.querySelector(".bp-table thead tr")?.textContent).toBe("SKUUnits");
-  expect(window.document.getElementById("count")?.textContent).toBe("3,000");
-  for (const button of window.document.querySelectorAll(".bp-row button")) (button as unknown as { click: () => void }).click();
+  expect(document.querySelectorAll(".kit-page > .bp-head, .kit-page > .bp-figures, .kit-page > .bp-table, .kit-page > .bp-row").length).toBe(5);
+  expect([...document.querySelectorAll(".bp-row")].map((row) => [row.querySelector(".bp-words .bp-name") !== null, row.querySelector("button")?.getAttribute("type")])).toEqual([[true, "button"], [true, "button"]]);
+  const rows = document.querySelectorAll(".bp-table tbody tr");
+  expect(rows.length).toBe(3000);
+  expect([0, 1500, 2999].map((at) => [...rows[at]!.querySelectorAll("td")].map((cell) => cell.textContent))).toEqual([["B00", "0"], ["B01500", "4500"], ["B02999", "8997"]]);
+  expect([...document.querySelectorAll(".bp-table thead th")].map((cell) => cell.textContent)).toEqual(["SKU", "Units"]);
+  expect(document.getElementById("count")?.textContent).toBe("3,000");
+  for (const button of document.querySelectorAll(".bp-row button")) (button as unknown as { click: () => void }).click();
   expect(saved).toEqual([{ name: "count.csv", text: "{what the count counts},3000" }, { file: "data/orders.csv" }]);
   await window.happyDOM.close();
 });

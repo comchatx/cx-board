@@ -35,7 +35,7 @@ When a turn of yours leaves a new file, the board opens nothing by itself: the t
 
 A board whose folder holds `page.html` at its top is drawn as that page in a frame, in place of its cards. Over the frame, the seller sees a row saying cx made it.
 
-The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, and the board scrolls it. A page in ordinary flow, as tall as what it holds, is drawn whole at any length. A page whose root takes its height from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) hands the frame the window's height instead of its own, and that window can be the board's height under the row, or 0; loaded while the board is closed, it reads another height first. A page that reads its window's height once keeps it until it is reloaded, unless it hears `resize`.
+The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, up to 100,000 px, and the board scrolls it. A page in ordinary flow is drawn whole up to that height; a taller one scrolls inside itself as well as in the board. A page shorter than the board may stand in a frame as tall as the board under the row. A root whose height comes from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) is drawn at that window's height, which the frame takes: the board's height under the row, or 0, and 0 while the board is closed. A height the page's code reads from its window and keeps stays as it was read until that code reads it again, at `resize` or after a reload.
 
 The page runs its own script and reaches nothing outside its board: it loads no script, style sheet or image from an address (an image or a sound is drawn from a `data:` address only), fetches nothing from the network, opens no outside address, submits no form and downloads no file by itself. A link out of the page does nothing there; a file reaches the seller through `cxBoard.save`.
 
@@ -107,7 +107,8 @@ A whole `page.html`: a heading, a count, a table of every row of a data file bes
   cxBoard.read(data).then((text) => {
     const [head, ...rows] = text.trim().split("\n").map((line) => line.split(","));
     document.getElementById("head").append(Kit.h("tr", {}, head.map((cell) => Kit.h("th", {}, cell))));
-    document.getElementById("rows").append(...rows.map((row) => Kit.h("tr", {}, row.map((cell) => Kit.h("td", {}, cell)))));
+    const body = document.getElementById("rows");
+    for (const row of rows) body.append(Kit.h("tr", {}, row.map((cell) => Kit.h("td", {}, cell))));
     document.getElementById("count").textContent = rows.length.toLocaleString(document.documentElement.dataset.locale);
     made = [["{what the count counts}", rows.length]].map((row) => row.join(",")).join("\n");
   });
