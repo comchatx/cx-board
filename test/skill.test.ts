@@ -58,19 +58,39 @@ it("tells cx which tabs draw a card's words as the chat does, and the size the b
   expect(skill).toContain("The board reads a card's file up to 32 KiB (32,768 bytes); a larger one is drawn by its title alone");
 });
 
-it("gives one example of a press that saves, in the kit's own button beside its line, handing the seller the page's words and a file of its board", async () => {
+it("says how a page gets its height: the frame takes the page's own and the board scrolls it, and a root sized to its window reads another", () => {
+  for (const said of [
+    "The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, and the board scrolls it.",
+    "A page whose root takes its height from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) hands the frame the window's height instead of its own",
+    "A page that reads its window's height once keeps it until it is reloaded, unless it hears `resize`.",
+  ]) expect(skill, said).toContain(said);
+});
+
+it("gives one whole page to start from, in the kit's elements and its flow: every row of a file beside it read with cxBoard.read, a count, and a press that saves the page's words and one that saves the file", async () => {
   const { Window } = await import("happy-dom");
-  const example = /A press that saves[^\n]*\n\n```html\n([\s\S]*?)\n```/.exec(skill)?.[1];
+  const example = /A whole `page.html`[^\n]*\n\n```html\n([\s\S]*?)\n```/.exec(skill)?.[1];
   expect(example).toBeDefined();
+  expect(example).toMatch(/^<!doctype html>\n<html>[\s\S]*<\/html>$/);
+  expect(example).not.toMatch(/100vh|height:\s*100%|innerHeight|<link|<script src/);
   const window = new Window({ settings: { enableJavaScriptEvaluation: true } });
-  const saved: unknown[] = [];
-  Object.assign(window, { cxBoard: { save: (given: unknown) => { saved.push(given); return Promise.resolve("saved"); } } });
+  const csv = ["SKU,Units", ...Array.from({ length: 3000 }, (_, n) => `B0${n},${n * 3}`)].join("\n");
+  const read: string[] = [], saved: unknown[] = [];
+  let ready!: () => void;
+  const drawn = new Promise<void>((done) => { ready = done; });
+  Object.assign(window, { cxBoard: { read: (file: string) => { read.push(file); return Promise.resolve(csv).finally(() => setTimeout(ready)); }, save: (given: unknown) => { saved.push(given); return Promise.resolve("saved"); } } });
+  window.eval(readFileSync(join(ROOT, "kit", "kit.js"), "utf8"));
+  window.document.documentElement.dataset["locale"] = "en";
   window.document.body.className = "kit";
-  window.document.body.innerHTML = example!.replace(/<script>[\s\S]*<\/script>/, "");
+  window.document.body.innerHTML = /<body class="kit">([\s\S]*?)<script>/.exec(example!)![1]!;
   window.eval(/<script>([\s\S]*)<\/script>/.exec(example!)![1]!);
-  expect([...window.document.querySelectorAll(".bp-row")].map((row) => [row.querySelector(".bp-words") !== null, row.querySelector("button")?.getAttribute("type")])).toEqual([[true, "button"], [true, "button"]]);
+  await drawn;
+  expect(read).toEqual(["data/orders.csv"]);
+  expect(window.document.querySelectorAll(".kit-page > .bp-head, .kit-page > .bp-figures, .kit-page > .bp-table, .kit-page > .bp-row").length).toBe(5);
+  expect(window.document.querySelectorAll(".bp-table tbody tr").length).toBe(3000);
+  expect(window.document.querySelector(".bp-table thead tr")?.textContent).toBe("SKUUnits");
+  expect(window.document.getElementById("count")?.textContent).toBe("3,000");
   for (const button of window.document.querySelectorAll(".bp-row button")) (button as unknown as { click: () => void }).click();
-  expect(saved).toEqual([{ name: "profit.csv", text: "Store,Profit\nUS,1284" }, { file: "data/orders.csv" }]);
+  expect(saved).toEqual([{ name: "count.csv", text: "{what the count counts},3000" }, { file: "data/orders.csv" }]);
   await window.happyDOM.close();
 });
 

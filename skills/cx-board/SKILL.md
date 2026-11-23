@@ -35,6 +35,8 @@ When a turn of yours leaves a new file, the board opens nothing by itself: the t
 
 A board whose folder holds `page.html` at its top is drawn as that page in a frame, in place of its cards. Over the frame, the seller sees a row saying cx made it.
 
+The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, and the board scrolls it. A page in ordinary flow, as tall as what it holds, is drawn whole at any length. A page whose root takes its height from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) hands the frame the window's height instead of its own, and that window can be the board's height under the row, or 0; loaded while the board is closed, it reads another height first. A page that reads its window's height once keeps it until it is reloaded, unless it hears `resize`.
+
 The page runs its own script and reaches nothing outside its board: it loads no script, style sheet or image from an address (an image or a sound is drawn from a `data:` address only), fetches nothing from the network, opens no outside address, submits no form and downloads no file by itself. A link out of the page does nothing there; a file reaches the seller through `cxBoard.save`.
 
 A page is at most 5 MiB (5,242,880 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load., and 重试 / Try again meets the same bound. Data kept in files beside the page, in its own board's folder, does not count toward it: the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline.
@@ -72,22 +74,48 @@ The page reaches the board through `window.cxBoard`, which the board defines:
 
 Text is plain; a draft or a sent message is at most 2,000 characters.
 
-A press that saves, one for the page's own words and one for a file of its board, each a button beside the line it is for:
+A whole `page.html`: a heading, a count, a table of every row of a data file beside the page, read with `cxBoard.read`, and two presses that save, one for the page's own words and one for the file, stacked down the page in its flow:
 
 ```html
-<div class="bp-row">
-  <div class="bp-words"><span class="bp-name">{what the file holds}</span></div>
-  <button type="button" id="save-made">{the page's word for saving}</button>
-</div>
-<div class="bp-row">
-  <div class="bp-words"><span class="bp-name">{what the file holds}</span></div>
-  <button type="button" id="save-file">{the page's word for saving}</button>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{the page's name}</title>
+</head>
+<body class="kit">
+<div class="kit-page">
+  <h2 class="bp-head">{what the page shows}</h2>
+  <dl class="bp-figures">
+    <div class="bp-figure"><dt>{what the count counts}</dt><dd id="count"></dd></div>
+  </dl>
+  <div class="markdown entry-body bp-table">
+    <table><thead id="head"></thead><tbody id="rows"></tbody></table>
+  </div>
+  <div class="bp-row">
+    <div class="bp-words"><span class="bp-name">{what the page's file holds}</span></div>
+    <button type="button" id="save-made">{the page's word for saving}</button>
+  </div>
+  <div class="bp-row">
+    <div class="bp-words"><span class="bp-name">{what the data file holds}</span></div>
+    <button type="button" id="save-file">{the page's word for saving}</button>
+  </div>
 </div>
 <script>
-  const rows = [["Store", "Profit"], ["US", "1284"]];
-  document.getElementById("save-made").onclick = () => cxBoard.save({ name: "profit.csv", text: rows.map((row) => row.join(",")).join("\n") });
-  document.getElementById("save-file").onclick = () => cxBoard.save({ file: "data/orders.csv" });
+  const data = "data/orders.csv";
+  let made = "";
+  cxBoard.read(data).then((text) => {
+    const [head, ...rows] = text.trim().split("\n").map((line) => line.split(","));
+    document.getElementById("head").append(Kit.h("tr", {}, head.map((cell) => Kit.h("th", {}, cell))));
+    document.getElementById("rows").append(...rows.map((row) => Kit.h("tr", {}, row.map((cell) => Kit.h("td", {}, cell)))));
+    document.getElementById("count").textContent = rows.length.toLocaleString(document.documentElement.dataset.locale);
+    made = [["{what the count counts}", rows.length]].map((row) => row.join(",")).join("\n");
+  });
+  document.getElementById("save-made").onclick = () => cxBoard.save({ name: "count.csv", text: made });
+  document.getElementById("save-file").onclick = () => cxBoard.save({ file: data });
 </script>
+</body>
+</html>
 ```
 
 
