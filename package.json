@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Keeps cx's reports and drafts on a board beside the chat.",
   "license": "MIT",
   "author": "ComChatX",
@@ -34,7 +34,13 @@
     "nameZh": "灵动看板",
     "about": "cx 的报告和草稿放上看板，不会淹没在对话里。",
     "mark": {
-      "line": "clipboard"
+      "on": "board",
+      "draw": [
+        {
+          "d": "M6.6 6.1h3.1a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-3.1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1zM6.6 12.9h3.1a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-3.1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1zM14.3 6.1h3.1a1 1 0 0 1 1 1v5.7a1 1 0 0 1 -1 1h-3.1a1 1 0 0 1 -1 -1v-5.7a1 1 0 0 1 1 -1z",
+          "cut": true
+        }
+      ]
     },
     "section": "extensions",
     "order": 110,
