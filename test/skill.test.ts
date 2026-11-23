@@ -63,7 +63,7 @@ it("says how a page gets its height: the frame takes the root's drawn height up 
     "The frame takes its height from the page: it is as tall as the page's root, `<html>`, is drawn, up to 100,000 px, and the board scrolls it.",
     "A page in ordinary flow is drawn whole up to that height; a taller one scrolls inside itself as well as in the board.",
     "A page shorter than the board may stand in a frame as tall as the board under the row.",
-    "A root whose height comes from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) is drawn at that window's height, which the frame takes: the board's height under the row, or 0, and 0 while the board is closed.",
+    "A root whose height comes from its window (`height: 100%`, `100vh`, a full-height box that scrolls inside) follows the frame's own window, not what the page holds, and that height is not the board's: it has been seen at 0, as it is while the board is closed, at the board's height under the row, short of that while the board is still loading, and at a height the board has since left.",
     "A height the page's code reads from its window and keeps stays as it was read until that code reads it again, at `resize` or after a reload.",
   ]) expect(skill, said).toContain(said);
   expect(skill).not.toContain("at any length");
