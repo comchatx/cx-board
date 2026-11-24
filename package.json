@@ -1,6 +1,6 @@
 {
   "name": "@comchatx/cx-board",
-  "version": "0.3.12",
+  "version": "0.4.0",
   "description": "Keeps cx's reports and drafts on a board beside the chat.",
   "license": "MIT",
   "author": "ComChatX",
@@ -93,6 +93,13 @@
         ],
         "page": "viewers/sheet.html",
         "bytes": true
+      },
+      {
+        "files": [
+          "pdf"
+        ],
+        "page": "viewers/pdf.html",
+        "bytes": true
       }
     ]
   },
@@ -102,6 +109,8 @@
     "happy-dom": "21.0.4",
     "jszip": "3.10.2",
     "mammoth": "1.13.0",
+    "pdfjs-dist": "6.5.438",
+    "playwright-core": "1.65.1",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   },

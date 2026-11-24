@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body { margin: 0; }
+#file { display: flex; flex-direction: column; gap: var(--space-4); }
+#file img { display: block; width: 100%; height: auto; box-shadow: 0 0 0 1px var(--line); }
+</style>
+</head>
+<body class="kit">
+<div id="file"></div>
+<script src="part:unreadable.js"></script>
+<script src="cmaps:pdfjs-dist"></script>
+<script type="module" src="lib:pdfjs-dist/build/pdf.worker.min.mjs"></script>
+<script type="module" src="lib:pdfjs-dist/build/pdf.min.mjs"></script>
+<script type="module">
+const box = document.getElementById("file");
+// The library asks for a character map by name and is handed the page's own; it is handed no address, so it fetches nothing.
+class Carried {
+  async fetch({ kind, filename }) {
+    const map = kind === "cMapUrl" ? CMAPS[filename] : undefined;
+    if (map === undefined) throw new Error(`${filename} is not carried`);
+    return Uint8Array.from(atob(map), (letter) => letter.charCodeAt(0));
+  }
+}
+let shown = 0, drawn = [];
+const forget = () => { for (const address of drawn) URL.revokeObjectURL(address); drawn = []; };
+cxBoard.on("file", async (file) => {
+  const turn = ++shown;
+  const data = Uint8Array.from(atob(file.bytes), (letter) => letter.charCodeAt(0));
+  const pdf = await pdfjsLib.getDocument({ data, BinaryDataFactory: Carried, isOffscreenCanvasSupported: false }).promise.catch(() => undefined);
+  if (turn !== shown) { pdf?.destroy(); return; }
+  forget();
+  if (pdf === undefined) { box.replaceChildren(unreadable()); return; }
+  box.replaceChildren();
+  // Each page is drawn once at the tab's width and kept as a picture, one after another, so a long file holds pictures and not canvases.
+  const width = Math.max(1, box.clientWidth) * (window.devicePixelRatio || 1);
+  for (let at = 1; at <= pdf.numPages && turn === shown; at++) {
+    const page = await pdf.getPage(at);
+    const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    await page.render({ canvas, viewport }).promise.catch(() => undefined);
+    const blob = await new Promise((done) => canvas.toBlob(done));
+    page.cleanup();
+    canvas.width = canvas.height = 0;
+    if (turn !== shown || blob === null) break;
+    const picture = new Image(), address = URL.createObjectURL(blob);
+    drawn.push(address);
+    picture.alt = "";
+    picture.width = Math.ceil(viewport.width);
+    picture.height = Math.ceil(viewport.height);
+    picture.src = address;
+    box.append(picture);
+  }
+  pdf.destroy();
+});
+</script>
+</body>
+</html>

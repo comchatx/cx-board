@@ -37,7 +37,7 @@ it("ships its skills, the page's elements, its viewers, its README in English an
   const answer = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8" })) as { files: { path: string }[] }[] | Record<string, { files: { path: string }[] }>;
   const packed = Array.isArray(answer) ? answer : Object.values(answer);
   const skills = walk(join(ROOT, "skills")).map((path) => relative(ROOT, path));
-  expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", "viewers/markdown.html", "viewers/picture.html", "viewers/table.html", "viewers/word.html", "viewers/sheet.html", "viewers/licences/mammoth.txt", "viewers/licences/sheetjs.txt", ...skills].sort());
+  expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", "viewers/markdown.html", "viewers/picture.html", "viewers/table.html", "viewers/word.html", "viewers/sheet.html", "viewers/pdf.html", "viewers/licences/mammoth.txt", "viewers/licences/sheetjs.txt", "viewers/licences/pdfjs-dist.txt", "viewers/licences/pdfjs-dist-cmaps.txt", ...skills].sort());
   expect(manifest.files).toEqual(["skills", "kit", "viewers", "!viewers/src", "README.zh-CN.md"]);
 });
 
@@ -49,7 +49,7 @@ it("the card's name is comchatx.name, the one signed on 2026-11-11", () => {
 
 it("holds each assembled viewer page and licence as the script makes it from its source and the pinned library, each page at most 5 MiB", () => {
   const made = viewerFiles();
-  expect([...made.keys()].sort()).toEqual(["viewers/licences/mammoth.txt", "viewers/licences/sheetjs.txt", "viewers/sheet.html", "viewers/table.html", "viewers/word.html"]);
+  expect([...made.keys()].sort()).toEqual(["viewers/licences/mammoth.txt", "viewers/licences/pdfjs-dist-cmaps.txt", "viewers/licences/pdfjs-dist.txt", "viewers/licences/sheetjs.txt", "viewers/pdf.html", "viewers/sheet.html", "viewers/table.html", "viewers/word.html"]);
   for (const [path, text] of made) expect(readFileSync(join(ROOT, path), "utf8") === text, `${path} is not what \`npm run viewers\` makes`).toBe(true);
   for (const path of made.keys()) if (path.endsWith(".html")) expect(Buffer.byteLength(made.get(path)!), path).toBeLessThanOrEqual(5 * 1024 * 1024);
 });
