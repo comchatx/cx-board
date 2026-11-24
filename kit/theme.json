@@ -15,6 +15,7 @@
   "--act-hover": "The primary button under the pointer.",
   "--act-wash": "Selected text.",
   "--bad": "A failed span on the timeline.",
+  "--live": "Words of work under way (`.kit-working`), and the light that passes along them is --ink. Where the platform hands none yet, --quiet.",
   "--live-edge": "The outline of a span that still runs.",
   "--float-edge": "The label's outline.",
   "--float-shadow": "The label's shadow.",

@@ -31,13 +31,14 @@ function viewer(page: string, markdown: (text: string) => Promise<string> = asyn
 }
 const at = { size: 1, modified: 1 };
 
-it("declares the viewers by the kinds they draw, each page in the package, the picture's, the Word file's and the Excel file's taking bytes", () => {
+it("declares the viewers by the kinds they draw, each page in the package, the picture's, the Word file's, the Excel file's and the PDF's taking bytes", () => {
   expect(manifest.comchatx.viewers).toEqual([
     { files: ["md", "markdown"], page: "viewers/markdown.html" },
     { files: ["csv", "tsv"], page: "viewers/table.html" },
     { files: ["png", "jpg", "jpeg", "gif", "webp"], page: "viewers/picture.html", bytes: true },
     { files: ["docx"], page: "viewers/word.html", bytes: true },
     { files: ["xlsx"], page: "viewers/sheet.html", bytes: true },
+    { files: ["pdf"], page: "viewers/pdf.html", bytes: true },
   ]);
   for (const one of manifest.comchatx.viewers) expect(readFileSync(join(ROOT, one.page), "utf8")).toMatch(/<body class="kit">/);
 });

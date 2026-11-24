@@ -2,7 +2,7 @@
  * The ready-made elements a board's page is built from. The board puts this file and `kit.js` into a page before the page's own code,
  * and the page is then drawn in ComChatX's look whoever wrote it: a card (`.entry`), a button in its three looks (`button`,
  * `button.primary`, `button:disabled`), a field (`.entry-field`), a table (`.markdown table`), a count (`.bp-figures`), a switch
- * (`.board-views`, made by `Kit.views`), questions with options (`Kit.questions`), a row with one press (`.bp-row`), a heading (`.bp-head`), a list of cards (`.kit-cards`), a list
+ * (`.board-views`, made by `Kit.views`), questions with options (`Kit.questions`), a row with one press (`.bp-row`), a heading (`.bp-head`), words of work under way (`.kit-working`), a list of cards (`.kit-cards`), a list
  * of files (`.kit-files`, each made by `Kit.file`), the empty line (`.board-empty`), a chart (`Kit.chart`) and a timeline
  * (`Kit.timeline`). Every colour, face, size, space and radius is a custom property the board sets on the page's `:root`
  * (`kit/theme.json` names each); this file sets none of them and fetches nothing. Each rule is under `.kit`, which a page puts on its
@@ -87,6 +87,13 @@ body.kit { margin: 0; }
 :where(.kit) .board-pill[hidden] { display: none; }
 :where(.kit) .board-views[data-still="true"] > .board-pill { transition: none; }
 @media (prefers-reduced-motion: reduce) { :where(.kit) .board-pill { transition: none; } }
+
+/* Words of work under way, as the chat says them: a light passes along them. Under a platform that hands no --live yet, --quiet, its value. */
+:where(.kit) .kit-working { color: var(--live, var(--quiet)); background: linear-gradient(90deg, var(--live, var(--quiet)) 0 35%, var(--ink) 50%, var(--live, var(--quiet)) 65% 100%) 100% 0 / 300% 100%;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: kit-working 2s linear infinite; }
+@keyframes kit-working { to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { :where(.kit) .kit-working { background: none; -webkit-text-fill-color: currentColor; animation: none; } }
+@media (forced-colors: active) { :where(.kit) .kit-working { background: none; -webkit-text-fill-color: currentColor; animation: none; } }
 @media not (min-width: 22.5rem) { :where(.kit) .board-view { padding: 0 var(--space-3); } }
 
 /* ---- The empty line ---- */

@@ -88,6 +88,13 @@ it("reads only the theme's names the platform sets on the page's root, each of t
   expect(js).not.toContain("var(--");
 });
 
+it("says work under way as the chat does: a light of --ink passing along --live, which a page under an older platform draws as --quiet, still where motion or forced colours are asked", () => {
+  expect(css).toContain(":where(.kit) .kit-working { color: var(--live, var(--quiet)); background: linear-gradient(90deg, var(--live, var(--quiet)) 0 35%, var(--ink) 50%, var(--live, var(--quiet)) 65% 100%) 100% 0 / 300% 100%;");
+  expect(css).toContain("animation: kit-working 2s linear infinite;");
+  expect(css).toContain("@keyframes kit-working { to { background-position: 0 0; } }");
+  for (const media of ["prefers-reduced-motion: reduce", "forced-colors: active"]) expect(css).toContain(`@media (${media}) { :where(.kit) .kit-working { background: none; -webkit-text-fill-color: currentColor; animation: none; } }`);
+});
+
 it("reads the theme the platform names on the root, and the language for nothing but how a name and its figure are joined", () => {
   expect(css).toContain(':where([data-theme="dark"])');
   expect(js).toContain("root.dataset.locale || root.lang");
@@ -105,7 +112,8 @@ it("gives a page the signed elements: a card, a button in its three looks, a fie
 
 /** Each selector of the stylesheet, its comments left out, inside an `@media` or not. */
 function selectors(source: string): string[] {
-  const plain = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  // A keyframe's steps are not selectors: an animation is named, and its name is the kit's own.
+  const plain = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/@keyframes\s+[\w-]+\s*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, "");
   const found: string[] = [];
   for (const match of plain.matchAll(/([^{}]+)\{/g)) {
     const head = match[1]!.trim();
@@ -131,6 +139,7 @@ it("holds every rule under the class a page takes the kit by, so a page that doe
     return !(scoped.startsWith(":where(.kit)") || /^(body)?\.kit(?![\w-])/.test(first));
   });
   expect(outside).toEqual([]);
+  expect([...css.matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1]).filter((name) => !name!.startsWith("kit-"))).toEqual([]);
   expect(css.replace(/\/\*[\s\S]*?\*\//g, "")).not.toMatch(/:root|(^|[\s,}])html[\s.{,:[]/);
 });
 

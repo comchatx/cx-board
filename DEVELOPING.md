@@ -23,3 +23,9 @@ The Word page draws a file by mammoth's built-in styles alone: `includeEmbeddedS
 The Excel page reads a file with SheetJS Community Edition 0.20.3, which its publisher offers at `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` and not on npm. It is carried as one file, `scripts/sheetjs/xlsx.mini.min.js` from that tarball's `package/dist/`, with the tarball's `LICENSE` beside it. Its sha256 is `0cb353f830d7288385492c83d277b058ddeac664ca51cf1393aa1fd3e2b70939`, and `test/package.test.ts` holds the file to it.
 
 A new version is a new file and its sha256, written here and in the test, and a rebuilt page, in a pull request that is reviewed.
+
+### The PDF reader
+
+The PDF page reads a file with `pdfjs-dist`, pinned exact. Its worker module is carried in the page before the library, which then runs it on the page's own thread: a frame of no origin can start no worker. The character maps for Simplified and Traditional Chinese text in a font the file doesn't embed are carried in the page as well, and pdf.js asks the page for them; the page hands pdf.js no address, so it fetches nothing. Japanese and Korean maps, and the JBIG2 and JPEG 2000 decoders pdf.js loads by address, are not carried. Each page is drawn once at the tab's width, kept as a picture, and its canvas let go.
+
+`test/pdf.browser.test.ts` draws the page in Chrome, in a frame of no origin under the platform's page policy (`test/browser.ts`), through `playwright-core` and the Chrome installed on the machine; the CI's runner carries one. Its Chinese page shows that the carried maps matter: with them taken out, that page draws no ink. That the characters are the right ones is seen on a real Chinese file after a release. A new pdf.js version is a bump of the pin, `npm run viewers`, and these tests.
