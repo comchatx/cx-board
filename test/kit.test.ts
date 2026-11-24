@@ -77,9 +77,9 @@ it("carries no words of its own: no Chinese, Japanese or Korean, no English phra
 
 it("reads only the theme's names the platform sets on the page's root, each of them named in kit/theme.json, and sets none of them", () => {
   const read = new Set([...css.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1]!));
-  // The chart and the timeline set their own place on each bar, span and hour, in the element's style.
+  // The chart and the timeline set their own place on each bar, span and hour, and the views their pill's, in the element's style.
   const own = new Set([...js.matchAll(/(--[\w-]+):\$\{/g)].map((match) => match[1]!));
-  expect([...own].sort()).toEqual(["--at", "--from", "--to", "--v"]);
+  expect([...own].sort()).toEqual(["--at", "--from", "--kit-w", "--kit-x", "--to", "--v"]);
   expect([...read].filter((name) => !own.has(name)).sort()).toEqual([...names].sort());
   expect(Object.keys(theme).filter((name) => !name.startsWith("--"))).toEqual(["data-theme", "data-locale"]);
   expect(css.match(/(^|[;{\s])--[\w-]+\s*:/g)).toBeNull();
