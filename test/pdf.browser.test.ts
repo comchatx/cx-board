@@ -57,3 +57,49 @@ it.each([["en", "This file can't be read."], ["zh", "无法读取此文件。"]]
   expect(await frame.$eval("#file", (box) => [box.children.length, box.textContent])).toEqual([1, line]);
   await page.close();
 });
+
+/** Stands in, inside the drawn page, for one way a page fails: its drawing refused, or its picture not made. Counts the loading tasks let go. */
+const failing = (frame: import("playwright-core").Frame, how: { readonly render?: number; readonly picture?: number }) => frame.evaluate(({ render, picture }) => {
+  const scope = window as unknown as { pdfjsLib: { getDocument: (spec: unknown) => { promise: Promise<{ getPage: (n: number) => Promise<{ render: (spec: unknown) => { promise: Promise<void> } }> }>; destroy: () => Promise<void> } }; letGo: number };
+  const library = scope.pdfjsLib, open = library.getDocument.bind(library);
+  scope.letGo = 0;
+  library.getDocument = (spec) => {
+    const task = open(spec), destroy = task.destroy.bind(task);
+    task.destroy = () => { scope.letGo++; return destroy(); };
+    void task.promise.then((pdf) => {
+      const get = pdf.getPage.bind(pdf);
+      pdf.getPage = async (n) => {
+        const page = await get(n);
+        if (n === render) page.render = () => ({ promise: Promise.reject(new Error("refused")) });
+        return page;
+      };
+    }, () => undefined);
+    return task;
+  };
+  let pictures = 0;
+  const make = HTMLCanvasElement.prototype.toBlob;
+  HTMLCanvasElement.prototype.toBlob = function (done, ...rest) { if (++pictures === picture) done(null); else make.call(this, done, ...rest); };
+}, how);
+
+it.each<[string, number | undefined, { readonly render?: number; readonly picture?: number }]>([
+  ["a page that cannot be had", 2, {}],
+  ["a page whose drawing is refused", undefined, { render: 2 }],
+  ["a page whose picture cannot be made", undefined, { picture: 2 }],
+])("shows the one line, and none of the pages, for a PDF that opens with %s; the file is let go", async (_, broken, how) => {
+  const { frame, hand, page } = await drawn(browser, "viewers/pdf.html");
+  await failing(frame, how);
+  await hand(pdfFile([1, 2, 3].map((n) => ({ lines: [`Page ${n}`], broken: n === broken }))));
+  await frame.waitForFunction(() => document.querySelector("#file [role=status]") !== null);
+  expect(await frame.$eval("#file", (box) => [box.children.length, box.querySelectorAll("img").length, box.textContent])).toEqual([1, 0, "This file can't be read."]);
+  await expect.poll(() => frame.evaluate(() => (window as unknown as { letGo: number }).letGo)).toBe(1);
+  await page.close();
+});
+
+it("lets go of a file that cannot be opened", async () => {
+  const { frame, hand, page } = await drawn(browser, "viewers/pdf.html");
+  await failing(frame, {});
+  await hand(Buffer.from("not a PDF").toString("base64"));
+  await frame.waitForFunction(() => document.querySelector("#file [role=status]") !== null);
+  await expect.poll(() => frame.evaluate(() => (window as unknown as { letGo: number }).letGo)).toBe(1);
+  await page.close();
+});

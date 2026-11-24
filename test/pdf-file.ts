@@ -1,6 +1,6 @@
 // A PDF written by hand for the tests: pages of Latin text in Helvetica, Chinese text in STSong-Light (a font the file does not
 // carry, so its characters are found by the UniGB-UCS2-H map), and a link whose target is a script.
-export type PdfPage = { readonly lines?: readonly string[]; readonly chinese?: string; readonly link?: string; readonly box?: boolean };
+export type PdfPage = { readonly lines?: readonly string[]; readonly chinese?: string; readonly link?: string; readonly box?: boolean; readonly broken?: boolean };
 
 const escape = (text: string) => text.replace(/[\\()]/g, (one) => `\\${one}`);
 const ucs2 = (text: string) => [...text].map((one) => one.charCodeAt(0).toString(16).padStart(4, "0")).join("").toUpperCase();
@@ -20,7 +20,8 @@ export function pdfFile(pages: readonly PdfPage[], more: { readonly opens?: stri
     if (page.box === true) text.push("0.2 0.4 0.8 rg 56 56 200 120 re f");
     const stream = text.join("\n");
     const link = page.link === undefined ? "" : ` /Annots [<< /Type /Annot /Subtype /Link /Rect [56 700 300 720] /Border [0 0 0] /A << /S /URI /URI (${escape(page.link)}) >> >> << /Type /Annot /Subtype /Link /Rect [56 670 300 690] /A << /S /JavaScript /JS (app.alert\\(1\\)) >> >>]`;
-    add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${at + 1} 0 R${link} >>`);
+    // A broken page is an entry of the page tree that is not a page: the file opens, and that page cannot be had.
+    if (page.broken === true) add("(not a page)"); else add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${at + 1} 0 R${link} >>`);
     add(`<< /Length ${Buffer.byteLength(stream, "latin1")} >>\nstream\n${stream}\nendstream`);
   }
   let out = "%PDF-1.7\n";

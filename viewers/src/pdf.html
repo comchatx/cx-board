@@ -30,33 +30,45 @@ cxBoard.on("file", async (file) => {
   const turn = ++shown;
   const data = Uint8Array.from(atob(file.bytes), (letter) => letter.charCodeAt(0));
   const task = pdfjsLib.getDocument({ data, BinaryDataFactory: Carried, isOffscreenCanvasSupported: false });
-  const pdf = await task.promise.catch(() => undefined);
-  if (turn !== shown) { task.destroy(); return; }
-  forget();
-  if (pdf === undefined) { box.replaceChildren(unreadable()); return; }
-  box.replaceChildren();
-  // Each page is drawn once at the tab's width and kept as a picture, one after another, so a long file holds pictures and not canvases.
-  const width = Math.max(1, box.clientWidth) * (window.devicePixelRatio || 1);
-  for (let at = 1; at <= pdf.numPages && turn === shown; at++) {
-    const page = await pdf.getPage(at);
-    const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(viewport.width);
-    canvas.height = Math.ceil(viewport.height);
-    await page.render({ canvas, viewport }).promise.catch(() => undefined);
-    const blob = await new Promise((done) => canvas.toBlob(done));
-    page.cleanup();
-    canvas.width = canvas.height = 0;
-    if (turn !== shown || blob === null) break;
-    const picture = new Image(), address = URL.createObjectURL(blob);
-    drawn.push(address);
-    picture.alt = "";
-    picture.width = Math.ceil(viewport.width);
-    picture.height = Math.ceil(viewport.height);
-    picture.src = address;
-    box.append(picture);
+  try {
+    const pdf = await task.promise;
+    if (turn !== shown) return;
+    forget();
+    box.replaceChildren();
+    // Each page is drawn once at the tab's width and kept as a picture, one after another, so a long file holds pictures and not canvases.
+    const width = Math.max(1, box.clientWidth) * (window.devicePixelRatio || 1);
+    for (let at = 1; at <= pdf.numPages; at++) {
+      const page = await pdf.getPage(at);
+      const viewport = page.getViewport({ scale: width / page.getViewport({ scale: 1 }).width });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      let blob;
+      try {
+        await page.render({ canvas, viewport }).promise;
+        blob = await new Promise((done) => canvas.toBlob(done));
+      } finally {
+        page.cleanup();
+        canvas.width = canvas.height = 0;
+      }
+      if (turn !== shown) return;
+      if (blob === null) throw new Error(`page ${at} made no picture`);
+      const picture = new Image(), address = URL.createObjectURL(blob);
+      drawn.push(address);
+      picture.alt = "";
+      picture.width = Math.ceil(viewport.width);
+      picture.height = Math.ceil(viewport.height);
+      picture.src = address;
+      box.append(picture);
+    }
+  } catch {
+    // A file that cannot be opened, or a page of it that cannot be had or drawn, is one that cannot be read: none of its pages stay.
+    if (turn !== shown) return;
+    forget();
+    box.replaceChildren(unreadable());
+  } finally {
+    task.destroy();
   }
-  task.destroy();
 });
 </script>
 </body>
