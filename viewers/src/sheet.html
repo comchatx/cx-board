@@ -9,12 +9,13 @@ body { margin: 0; }
 <body class="kit"><div id="views"></div><div class="markdown" id="file"></div>
 <script src="file:sheetjs/xlsx.mini.min.js"></script>
 <script src="part:table-draw.js"></script>
+<script src="part:unreadable.js"></script>
 <script>
 // An Excel file's sheets as Excel shows them: each cell's text as the file saved it, hidden sheets left out.
 const box = document.getElementById("file"), views = document.getElementById("views");
 cxBoard.on("file", (file) => {
   let book;
-  try { book = XLSX.read(file.bytes, { type: "base64" }); } catch { book = { SheetNames: [] }; }
+  try { book = XLSX.read(file.bytes, { type: "base64" }); } catch { views.replaceChildren(); box.replaceChildren(unreadable()); return; }
   const shown = book.SheetNames.filter((name, at) => !book.Workbook?.Sheets?.[at]?.Hidden);
   const draw = (name) => box.replaceChildren(tableOf(XLSX.utils.sheet_to_json(book.Sheets[name], { header: 1, raw: false, defval: "" })));
   views.replaceChildren(...(shown.length > 1 ? [Kit.views({ label: file.name, views: shown.map((name) => ({ id: name, words: name })), shown: shown[0], change: draw })] : []));

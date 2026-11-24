@@ -30,12 +30,21 @@ const tableOf = (rows) => {
   return table;
 };
 </script>
+<script>// The line the board draws when it cannot read a file, in its words and its look, for a file the page's library cannot read.
+const unreadable = () => {
+  const root = document.documentElement, line = document.createElement("p");
+  line.setAttribute("role", "status");
+  line.style.cssText = "margin: calc(var(--space-6) - var(--space-5)) 0 0; color: var(--quiet); font-size: var(--size-small); line-height: var(--leading-small);";
+  line.textContent = /^zh\b/i.test(root.dataset.locale || root.lang) ? "无法读取此文件。" : "This file can't be read.";
+  return line;
+};
+</script>
 <script>
 // An Excel file's sheets as Excel shows them: each cell's text as the file saved it, hidden sheets left out.
 const box = document.getElementById("file"), views = document.getElementById("views");
 cxBoard.on("file", (file) => {
   let book;
-  try { book = XLSX.read(file.bytes, { type: "base64" }); } catch { book = { SheetNames: [] }; }
+  try { book = XLSX.read(file.bytes, { type: "base64" }); } catch { views.replaceChildren(); box.replaceChildren(unreadable()); return; }
   const shown = book.SheetNames.filter((name, at) => !book.Workbook?.Sheets?.[at]?.Hidden);
   const draw = (name) => box.replaceChildren(tableOf(XLSX.utils.sheet_to_json(book.Sheets[name], { header: 1, raw: false, defval: "" })));
   views.replaceChildren(...(shown.length > 1 ? [Kit.views({ label: file.name, views: shown.map((name) => ({ id: name, words: name })), shown: shown[0], change: draw })] : []));

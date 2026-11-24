@@ -10,6 +10,7 @@ body { margin: 0; }
 <body class="kit">
 <div class="markdown" id="file"></div>
 <script src="lib:mammoth/mammoth.browser.min.js"></script>
+<script src="part:unreadable.js"></script>
 <script>
 const box = document.getElementById("file");
 // A link is drawn as its words, so no link of the file's can run as the page.
@@ -25,8 +26,10 @@ let shown = 0;
 cxBoard.on("file", async (file) => {
   const turn = ++shown;
   const bytes = Uint8Array.from(atob(file.bytes), (letter) => letter.charCodeAt(0));
-  const html = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer }, { transformDocument: unlinked }).then((done) => done.value, () => "");
-  if (turn === shown) box.innerHTML = html;
+  const html = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer }, { transformDocument: unlinked }).then((done) => done.value, () => undefined);
+  if (turn !== shown) return;
+  if (html === undefined) box.replaceChildren(unreadable());
+  else box.innerHTML = html;
 });
 </script>
 </body>

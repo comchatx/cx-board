@@ -129,13 +129,15 @@ it("draws a Word file's footnote at its end, a link in the note as its words too
   expect([...box.querySelectorAll("a")].map((one) => one.getAttribute("href"))).toEqual(["#footnote-1", "#footnote-ref-1"]);
 });
 
-it("draws nothing for a file that is no Word file, and clears the one drawn before", async () => {
+it.each([["en", "This file can't be read."], ["zh", "无法读取此文件。"]])("says in %s, as the board does, that a file which is no Word file can't be read, in place of the one drawn before", async (locale, words) => {
   const { document, hand } = viewer("viewers/word.html");
+  document.documentElement.dataset.locale = locale;
   const box = document.querySelector(".markdown")!;
   await hand(word(await docx(`<w:p>${run("Kept")}</w:p>`)));
   await vi.waitFor(() => expect(box.textContent).toBe("Kept"));
   await hand(word(Buffer.from("a locked file, or none at all").toString("base64")));
-  await vi.waitFor(() => expect(box.innerHTML).toBe(""));
+  await vi.waitFor(() => expect(box.textContent).toBe(words));
+  expect([box.children.length, box.firstElementChild!.getAttribute("role")]).toEqual([1, "status"]);
 });
 
 const XLSX = new Function(`${readFileSync(join(ROOT, "scripts", "sheetjs", "xlsx.mini.min.js"), "utf8")}; return XLSX;`)() as {
@@ -164,10 +166,14 @@ it("draws an Excel file's sheets one at a time under a switch of their names, hi
   expect([names(), drawn(document)]).toEqual([["Sales:false", "Costs:true"], [["TH:fee"], ["TD:1.5"]]]);
 });
 
-it("draws an Excel file of one sheet with no switch, and an encrypted file as nothing, clearing what was drawn", async () => {
+it.each([["en", "This file can't be read."], ["zh", "无法读取此文件。"]])("draws an Excel file of one sheet with no switch, and says in %s, as the board does, that an encrypted file can't be read", async (locale, words) => {
   const { document, hand } = viewer("viewers/sheet.html");
+  document.documentElement.dataset.locale = locale;
+  await hand(xlsx({ Only: [["a"], ["1"]], Also: [["b"]] }));
   await hand(xlsx({ Only: [["a"], ["1"]] }));
   expect([document.querySelector('[role="tablist"]'), drawn(document)]).toEqual([null, [["TH:a"], ["TD:1"]]]);
+  await hand(xlsx({ Only: [["a"]], Also: [["b"]] }));
   await hand({ path: "locked.xlsx", name: "locked.xlsx", ...at, bytes: Buffer.concat([Buffer.from("d0cf11e0a1b11ae1", "hex"), Buffer.alloc(600)]).toString("base64") });
-  expect([document.querySelector('[role="tablist"]'), document.querySelector("#file")!.innerHTML]).toEqual([null, ""]);
+  const box = document.querySelector("#file")!;
+  expect([document.querySelector('[role="tablist"]'), box.textContent, box.children.length, box.firstElementChild!.getAttribute("role")]).toEqual([null, words, 1, "status"]);
 });
