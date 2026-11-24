@@ -5,6 +5,7 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DefaultResourceLoader, SettingsManager } from "@earendil-works/pi-coding-agent";
 import { afterEach, expect, it } from "vitest";
+import { viewerFiles } from "../scripts/viewers.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const manifest = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { pi: unknown; files: unknown; comchatx: { skills: Record<string, unknown> } };
@@ -35,12 +36,19 @@ it("ships its skills, the page's elements, its viewers, its README in English an
   const answer = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8" })) as { files: { path: string }[] }[] | Record<string, { files: { path: string }[] }>;
   const packed = Array.isArray(answer) ? answer : Object.values(answer);
   const skills = walk(join(ROOT, "skills")).map((path) => relative(ROOT, path));
-  expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", "viewers/markdown.html", "viewers/picture.html", "viewers/table.html", ...skills].sort());
-  expect(manifest.files).toEqual(["skills", "kit", "viewers", "README.zh-CN.md"]);
+  expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", "viewers/markdown.html", "viewers/picture.html", "viewers/table.html", "viewers/word.html", "viewers/licences/mammoth.txt", ...skills].sort());
+  expect(manifest.files).toEqual(["skills", "kit", "viewers", "!viewers/src", "README.zh-CN.md"]);
 });
 
 it("the card's name is comchatx.name, the one signed on 2026-11-11", () => {
   const field = (JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { comchatx: { name?: unknown; nameZh?: unknown } }).comchatx;
   expect(field.name).toBe("Flex Board");
   expect(field.nameZh).toBe("灵动看板");
+});
+
+it("holds each assembled viewer page and licence as the script makes it from its source and the pinned library, each page at most 5 MiB", () => {
+  const made = viewerFiles();
+  expect([...made.keys()].sort()).toEqual(["viewers/licences/mammoth.txt", "viewers/word.html"]);
+  for (const [path, text] of made) expect(readFileSync(join(ROOT, path), "utf8") === text, `${path} is not what \`npm run viewers\` makes`).toBe(true);
+  for (const path of made.keys()) if (path.endsWith(".html")) expect(Buffer.byteLength(made.get(path)!), path).toBeLessThanOrEqual(5 * 1024 * 1024);
 });
