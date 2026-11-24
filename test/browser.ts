@@ -22,12 +22,13 @@ function framed(path: string, locale: string): string {
   return read(path).replace(/^<!doctype html>\s*/i, (doctype) => doctype + head);
 }
 
-export type Drawn = { readonly page: Page; readonly frame: Frame; readonly asked: readonly string[]; readonly hand: (bytes: string) => Promise<void> };
+export type Drawn = { readonly page: Page; readonly frame: Frame; readonly asked: readonly string[]; readonly errors: readonly string[]; readonly hand: (bytes: string) => Promise<void> };
 
-/** The page at `path` in a frame of no origin, handed a file by `hand`; `asked` lists every address the browser was asked for. */
+/** The page at `path` in a frame of no origin, handed a file by `hand`; `asked` lists every address the browser was asked for, `errors` what the page threw. */
 export async function drawn(browser: Browser, path: string, locale = "en"): Promise<Drawn> {
   const page = await browser.newPage({ viewport: { width: 760, height: 900 } });
-  const asked: string[] = [];
+  const asked: string[] = [], errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   page.on("request", (request) => { if (request.url() !== "https://board.test/") asked.push(request.url()); });
   await page.route("https://board.test/", (route) => route.fulfill({ contentType: "text/html", body: '<!doctype html><body style="margin:0"><iframe sandbox="allow-scripts" style="border:0;width:100%;height:100vh"></iframe></body>' }));
   await page.goto("https://board.test/");
@@ -38,7 +39,7 @@ export async function drawn(browser: Browser, path: string, locale = "en"): Prom
   }), framed(path, locale));
   const frame = page.frames().find((one) => one !== page.mainFrame())!;
   const hand = (bytes: string) => page.evaluate((file) => document.querySelector("iframe")!.contentWindow!.postMessage({ cx: "file", file }, "*"), { path: "reports/w46.pdf", name: "w46.pdf", size: bytes.length, modified: "2026-11-24T00:00:00.000Z", bytes });
-  return { page, frame, asked, hand };
+  return { page, frame, asked, errors, hand };
 }
 
 export const launch = (): Promise<Browser> => chromium.launch({ channel: "chrome" });

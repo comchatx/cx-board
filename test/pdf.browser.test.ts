@@ -21,7 +21,7 @@ const inked = (frame: import("playwright-core").Frame, at: number) => frame.eval
 }, at);
 
 it("draws each page of a PDF at the tab's width, one under another, a page whose words are in a font the file does not carry among them, reaching nothing", async () => {
-  const { frame, asked, hand, page } = await drawn(browser, "viewers/pdf.html");
+  const { frame, asked, errors, hand, page } = await drawn(browser, "viewers/pdf.html");
   await hand(pdfFile([{ lines: ["Week 46 sales", "Units 1,284"] }, { chinese: "第46周销售报告" }, { lines: ["Last page"], box: true }]));
   await frame.waitForFunction(() => document.querySelectorAll("#file img").length === 3);
   const sizes = await frame.$$eval("#file img", (pictures) => (pictures as HTMLImageElement[]).map((one) => [Math.round(one.getBoundingClientRect().width), one.naturalWidth > 0]));
@@ -29,6 +29,10 @@ it("draws each page of a PDF at the tab's width, one under another, a page whose
   expect(await inked(frame, 0)).toBeGreaterThan(50);
   expect(await inked(frame, 1)).toBeGreaterThan(50);
   expect(asked.filter((address) => !address.startsWith("blob:") && !address.startsWith("data:"))).toEqual([]);
+  // The file is let go once its last page is drawn.
+  await expect.poll(() => errors).toEqual([]);
+  await frame.waitForTimeout(200);
+  expect(errors).toEqual([]);
   await page.close();
 });
 

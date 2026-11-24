@@ -29,8 +29,9 @@ const forget = () => { for (const address of drawn) URL.revokeObjectURL(address)
 cxBoard.on("file", async (file) => {
   const turn = ++shown;
   const data = Uint8Array.from(atob(file.bytes), (letter) => letter.charCodeAt(0));
-  const pdf = await pdfjsLib.getDocument({ data, BinaryDataFactory: Carried, isOffscreenCanvasSupported: false }).promise.catch(() => undefined);
-  if (turn !== shown) { pdf?.destroy(); return; }
+  const task = pdfjsLib.getDocument({ data, BinaryDataFactory: Carried, isOffscreenCanvasSupported: false });
+  const pdf = await task.promise.catch(() => undefined);
+  if (turn !== shown) { task.destroy(); return; }
   forget();
   if (pdf === undefined) { box.replaceChildren(unreadable()); return; }
   box.replaceChildren();
@@ -55,7 +56,7 @@ cxBoard.on("file", async (file) => {
     picture.src = address;
     box.append(picture);
   }
-  pdf.destroy();
+  task.destroy();
 });
 </script>
 </body>
