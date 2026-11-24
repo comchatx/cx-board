@@ -4,6 +4,7 @@
   "--ground": "The page's ground; a field's ground; a running span's open bar.",
   "--raised": "A card's, a row's, a button's and a file's ground; the label's ground.",
   "--wash": "A table's head, a code span, a disabled button, the shown view of a switch, a timeline's track.",
+  "--held": "The view a switch shows: its pill on the wash. Where the platform hands none yet, --raised.",
   "--hover": "A button under the pointer; the switch's ground.",
   "--line": "A card's, a row's, a file's and a table cell's edge; the chart's top and foot; a disabled button's edge; a quote's rule.",
   "--edge": "A button's and a field's outline.",

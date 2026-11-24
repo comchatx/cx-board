@@ -110,33 +110,66 @@
   }
 
   /**
-   * A switch between views of one page: the one shown is ink on wash. Either arrow goes to the other and shows it, Home to the first,
-   * End to the last. `views` are `{ id, words }`; `change` hears the id shown.
+   * A switch between views of one page, as the board's own choice: the values on one track, the one shown on a pill that slides to the
+   * next. Either arrow goes to the other and shows it, Home to the first, End to the last. `views` are `{ id, words }`; `change` hears the
+   * id shown.
    */
   function views({ label, views: all, shown, change }) {
     const tabs = all.map((view) => h("button", { type: "button", class: "board-view", role: "tab", "data-view": view.id }, view.words));
+    const pill = h("i", { class: "board-pill", "aria-hidden": "true" });
+    let at = 0;
+    const place = (slide) => {
+      const held = tabs[at];
+      // A view shown that none of the views is, as a page may keep one from before, has none selected and no pill, as 0.3.12 drew it.
+      pill.hidden = held === undefined;
+      if (held === undefined) return;
+      box.setAttribute("data-still", String(!slide));
+      pill.setAttribute("style", `--kit-x:${held.offsetLeft}px;--kit-w:${held.offsetWidth}px`);
+    };
     const show = (id, focus) => {
-      for (const tab of tabs) { const on = tab.dataset.view === id; tab.setAttribute("aria-selected", String(on)); tab.tabIndex = on ? 0 : -1; if (on && focus) tab.focus(); }
+      at = tabs.findIndex((tab) => tab.dataset.view === id);
+      for (const [n, tab] of tabs.entries()) { const on = n === at; tab.setAttribute("aria-selected", String(on)); tab.tabIndex = on ? 0 : -1; if (on && focus) tab.focus(); }
+      place(box.isConnected);
       change?.(id);
     };
     const box = h("div", { class: "board-views", role: "tablist", "aria-label": label, onkeydown: (event) => {
-      const at = tabs.indexOf(document.activeElement);
-      if (at === -1) return;
-      const to = { ArrowLeft: (at - 1 + tabs.length) % tabs.length, ArrowRight: (at + 1) % tabs.length, Home: 0, End: tabs.length - 1 }[event.key];
+      const from = tabs.indexOf(document.activeElement);
+      if (from === -1) return;
+      const to = { ArrowLeft: (from - 1 + tabs.length) % tabs.length, ArrowRight: (from + 1) % tabs.length, Home: 0, End: tabs.length - 1 }[event.key];
       if (to === undefined) return;
       event.preventDefault();
       show(tabs[to].dataset.view, true);
-    } }, tabs);
+    } }, pill, tabs);
     for (const tab of tabs) tab.addEventListener("click", () => show(tab.dataset.view));
     show(shown ?? all[0].id);
+    // Placed with no motion once drawn, and again when the page's width or the words change it.
+    requestAnimationFrame(() => place(false));
+    if (typeof ResizeObserver === "function") new ResizeObserver(() => place(false)).observe(box);
     return box;
   }
 
+  const SHEET = ["M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"];
+  /** Each kind's mark, as the board's own file box draws it: the sheet with its kind inside; a kind the board does not draw is the sheet. */
+  const MARKS = {
+    markdown: [...SHEET, "M9.5 12h5", "M9.5 15h5", "M9.5 18h3"],
+    table: [...SHEET, "M9.5 11.5h6v6h-6z", "M9.5 14.5h6", "M12.5 11.5v6"],
+    html: [...SHEET, "M11 12l-2 2.5 2 2.5", "M14 12l2 2.5-2 2.5"],
+    picture: [...SHEET, "M9 18l2.5-3.5 2 2.5 1.5-2 1.5 3", "M10.5 11.5a.6.6 0 1 0 0 1.2a.6.6 0 1 0 0-1.2z"],
+  };
+  const KINDS = { md: "markdown", markdown: "markdown", csv: "table", tsv: "table", png: "picture", jpg: "picture", jpeg: "picture", gif: "picture", webp: "picture", html: "html", htm: "html" };
+  const BOARD = ["M9 5H7a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2", "M9 3.5h6v3H9z", "M9.5 11h5", "M9.5 15h3.5"];
+  const marked = (paths, kind) => { const one = icon(...paths); one.setAttribute("class", `icon ${kind}`); return one; };
+  const markOf = (name) => { const dot = name.lastIndexOf("."); return MARKS[KINDS[dot > 0 ? name.slice(dot + 1).toLowerCase() : ""]] ?? SHEET; };
+
   /**
-   * A file, as a message names one; given its path in the tree, a button the board's own script in the page takes a press on, to show the
-   * file on a tab of the board. The kit hears no press of its own.
+   * A file, as a message names one: its kind's mark and its name. Given its path in the tree, the mark is the kind of the path's last
+   * part, whatever the name says, and a button the board's own script in the page
+   * takes a press on, to show the file on a tab of the board, whose mark gives way to the board's under the pointer or the keyboard. The
+   * kit hears no press of its own.
    */
-  const file = (name, path) => h(path === undefined ? "span" : "button", { class: "file-ref", ...(path === undefined ? {} : { type: "button", "data-cx-file": path }) }, icon("M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"), h("span", { class: "file-ref-name" }, name));
+  const file = (name, path) => path === undefined
+    ? h("span", { class: "file-ref" }, h("span", { class: "mark" }, marked(markOf(name), "of-kind")), h("span", { class: "file-ref-name" }, name))
+    : h("button", { type: "button", class: "file-ref", "data-cx-file": path }, h("span", { class: "mark" }, marked(markOf(path.slice(path.lastIndexOf("/") + 1)), "of-kind"), marked(BOARD, "to-board")), h("span", { class: "file-ref-name" }, name));
 
   /**
    * Questions with options, as the chat's option card asks them, for a card of the page's. `form` is the platform's: an option form

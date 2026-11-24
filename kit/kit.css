@@ -76,12 +76,18 @@ body.kit { margin: 0; }
 :where(.kit) .entry-field::placeholder { color: var(--quiet); opacity: 1; }
 :where(.kit) .entry-field:not(:placeholder-shown) { border-color: var(--ink); }
 
-/* ---- A switch between views of one page: the one shown is ink on wash ---- */
-:where(.kit) .board-views { display: flex; padding: var(--space-1); border: 1px solid var(--line); border-radius: var(--radius); background: var(--hover); }
+/* ---- A switch between views of one page, as the board's choice: values on a wash with no outline, the one shown on a pill that slides ---- */
+:where(.kit) .board-views { position: relative; display: inline-flex; max-width: 100%; height: var(--space-8); padding: var(--space-1); border: none; border-radius: var(--radius); background: var(--wash); }
 :where(.kit) .board-views[hidden] { display: none; }
-:where(.kit) .board-view { padding: var(--space-2) var(--space-5); border: none; border-radius: var(--radius); background: none; color: var(--quiet); }
-:where(.kit) .board-view:hover:not(:disabled) { background: none; color: var(--ink); }
-:where(.kit) .board-view[aria-selected="true"], :where(.kit) .board-view[aria-selected="true"]:hover:not(:disabled) { background: var(--wash); color: var(--ink); font-weight: var(--weight-strong); }
+:where(.kit) .board-view { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0 var(--space-5); border: none; border-radius: var(--radius-small); background: none; color: var(--quiet); white-space: nowrap; }
+:where(.kit) .board-view:hover:not(:disabled), :where(.kit) .board-view[aria-selected="true"] { background: none; color: var(--ink); }
+:where(.kit) .board-view:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; }
+/* Under a platform that does not hand --held yet, the pill is the raised ground, the colour it is in the light theme. */
+:where(.kit) .board-pill { position: absolute; top: var(--space-1); bottom: var(--space-1); left: 0; width: var(--kit-w, 0); transform: translateX(var(--kit-x, 0)); border-radius: var(--radius-small); background: var(--held, var(--raised)); box-shadow: 0 0 0 1px var(--line); transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), width 120ms cubic-bezier(0.2, 0, 0, 1); }
+:where(.kit) .board-pill[hidden] { display: none; }
+:where(.kit) .board-views[data-still="true"] > .board-pill { transition: none; }
+@media (prefers-reduced-motion: reduce) { :where(.kit) .board-pill { transition: none; } }
+@media not (min-width: 22.5rem) { :where(.kit) .board-view { padding: 0 var(--space-3); } }
 
 /* ---- The empty line ---- */
 :where(.kit) .board-empty { margin: 0; color: var(--quiet); font-size: var(--size-small); line-height: var(--leading-small); }
@@ -127,6 +133,11 @@ body.kit { margin: 0; }
 :where(.kit) .file-ref-name { min-width: 0; overflow-wrap: anywhere; }
 :where(.kit) button.file-ref { text-align: left; cursor: pointer; }
 :where(.kit) button.file-ref:hover { background: var(--float-hover); }
+:where(.kit) .file-ref .mark { flex: none; display: inline-grid; }
+:where(.kit) .file-ref .mark > .icon { grid-area: 1 / 1; }
+:where(.kit) .file-ref .mark > .to-board { visibility: hidden; color: var(--ink); }
+:where(.kit) button.file-ref:is(:hover, :focus-visible) .mark > .of-kind { visibility: hidden; }
+:where(.kit) button.file-ref:is(:hover, :focus-visible) .mark > .to-board { visibility: visible; }
 
 /* ---- The label over what the pointer or the keyboard is on ---- */
 :where(.kit) .cx-tip { position: fixed; z-index: 5; left: 0; top: 0; padding: var(--space-1) var(--space-4); border: 1px solid var(--float-edge); border-radius: var(--radius); background: var(--raised); color: var(--ink); font-size: var(--size-small); line-height: var(--leading-small); white-space: nowrap; box-shadow: var(--float-shadow); pointer-events: none; }
