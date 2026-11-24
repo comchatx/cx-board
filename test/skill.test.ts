@@ -16,11 +16,11 @@ it("tells cx of the base alone: where the board is, that a file with a title is 
   for (const gone of ["todo/", "done/", "已读", "Mark as read", "kind:", "proposal", "choice", "交给 cx", "忽略", "deleted"]) expect(skill, gone).not.toContain(gone);
 });
 
-it("tells cx how a page is written: page.html at the board's top, drawn in a frame under a row saying cx made it, loading nothing, built from the elements, and reaching the board through cxBoard", () => {
+it("tells cx how a page is written: page.html at the board's top, drawn in a frame under a row saying cx made it, reaching only https addresses, built from the elements, and reaching the board through cxBoard", () => {
   for (const said of [
     "`page.html` at its top is drawn as that page in a frame",
     "a row saying cx made it",
-    "fetches nothing from the network, opens no outside address, submits no form and downloads no file by itself. A link out of the page does nothing there; a file reaches the seller through `cxBoard.save`.",
+    "it reaches none of the seller's ComChatX, its pages, its storage or the seller's sign-in", "Outside its board it reaches only `https` addresses", "a file reaches the seller through `cxBoard.save`.",
     "A page is at most 5 MiB (5,242,880 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load.",
     "the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline",
     "a file written with a shell command or a script meets none of them until the seller opens the page or the tab",

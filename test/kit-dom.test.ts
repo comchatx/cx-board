@@ -128,6 +128,49 @@ it("draws a file as a message names one, and given its path a button that carrie
   expect(pressed).toEqual([]);
 });
 
+it("draws a file's kind mark, which gives way to the board's under the pointer or the keyboard where a press opens it", () => {
+  const { window, document, load } = page("", "kit");
+  const Kit = load() as unknown as { file: (name: string, path?: string) => HTMLElement };
+  const paths = (box: HTMLElement, kind: string) => [...box.querySelectorAll(`.mark > .${kind} path`)].map((one) => one.getAttribute("d"));
+  const table = Kit.file("sales.CSV", "reports/sales.CSV");
+  const plain = Kit.file("notes.docx", "notes.docx");
+  const named = Kit.file("sales.csv");
+  document.body.append(table, plain, named);
+  expect(paths(table, "of-kind")).toContain("M9.5 11.5h6v6h-6z");
+  expect(paths(plain, "of-kind")).toEqual(["M7 3.5h7l4 4v13H7z", "M14 3.5v4h4"]);
+  expect(paths(table, "to-board")).toContain("M9 3.5h6v3H9z");
+  // A file a press does not open keeps its kind's mark alone.
+  expect(named.querySelectorAll(".to-board").length).toBe(0);
+  const seen = (box: HTMLElement) => ["of-kind", "to-board"].map((kind) => window.getComputedStyle(box.querySelector(`.mark > .${kind}`) as never).visibility);
+  expect(seen(table).map((one) => one === "hidden")).toEqual([false, true]);
+  expect(css).toContain(":where(.kit) button.file-ref:is(:hover, :focus-visible) .mark > .of-kind { visibility: hidden; }");
+  expect(css).toContain(":where(.kit) button.file-ref:is(:hover, :focus-visible) .mark > .to-board { visibility: visible; }");
+});
+
+it("draws views as the board's choice: one pill on --held, or the raised ground where the platform hands none, placed under the view shown", () => {
+  type Views = { views: (spec: unknown) => HTMLElement };
+  const shownTo: string[] = [];
+  const draw = () => {
+    const { window, document, load } = page("", "kit");
+    const box = (load() as unknown as Views).views({ label: "Views", views: [{ id: "a", words: "Days" }, { id: "b", words: "Weeks" }, { id: "c", words: "Months" }], shown: "b", change: (id: string) => shownTo.push(id) });
+    document.body.append(box);
+    return { window, box, pill: box.querySelector(".board-pill") as HTMLElement, tabs: [...box.querySelectorAll<HTMLButtonElement>(".board-view")] };
+  };
+  const { window, box, pill, tabs } = draw();
+  expect([pill.getAttribute("aria-hidden"), box.firstElementChild]).toEqual(["true", pill]);
+  expect(tabs.map((tab) => [tab.getAttribute("aria-selected"), tab.tabIndex])).toEqual([["false", -1], ["true", 0], ["false", -1]]);
+  tabs.forEach((tab, n) => { Object.defineProperty(tab, "offsetLeft", { value: 4 + 60 * n }); Object.defineProperty(tab, "offsetWidth", { value: 56 }); });
+  tabs[2]!.click();
+  expect([pill.getAttribute("style"), box.getAttribute("data-still")]).toEqual(["--kit-x:124px;--kit-w:56px", "false"]);
+  tabs[2]!.focus();
+  tabs[2]!.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Home", bubbles: true }) as never);
+  expect([pill.getAttribute("style"), window.document.activeElement]).toEqual(["--kit-x:4px;--kit-w:56px", tabs[0]]);
+  expect(shownTo).toEqual(["b", "c", "a"]);
+  // The pill is --held, and under a platform that hands none yet the raised ground: a fallback a browser takes and happy-dom does not
+  // resolve, so the rule is read as written.
+  expect(css).toContain("background: var(--held, var(--raised));");
+});
+
 type Asked = { form: unknown; words: unknown; under?: HTMLElement; answer: (value: unknown) => void };
 const WORDS = {
   other: "Another answer", otherTo: (question: string) => `Another answer to ${question}`, submit: "Submit", next: "Next question", previous: "Previous question",
