@@ -23,11 +23,13 @@
     "skills",
     "kit",
     "viewers",
+    "!viewers/src",
     "README.zh-CN.md"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "viewers": "node scripts/viewers.mjs"
   },
   "comchatx": {
     "name": "Flex Board",
@@ -77,6 +79,20 @@
         ],
         "page": "viewers/picture.html",
         "bytes": true
+      },
+      {
+        "files": [
+          "docx"
+        ],
+        "page": "viewers/word.html",
+        "bytes": true
+      },
+      {
+        "files": [
+          "xlsx"
+        ],
+        "page": "viewers/sheet.html",
+        "bytes": true
       }
     ]
   },
@@ -84,6 +100,8 @@
     "@earendil-works/pi-coding-agent": "1.5.2",
     "@types/node": "26.2.0",
     "happy-dom": "21.0.4",
+    "jszip": "3.10.2",
+    "mammoth": "1.13.0",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   },
