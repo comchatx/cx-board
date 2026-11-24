@@ -120,11 +120,14 @@
     let at = 0;
     const place = (slide) => {
       const held = tabs[at];
+      // A view shown that none of the views is, as a page may keep one from before, has none selected and no pill, as 0.3.12 drew it.
+      pill.hidden = held === undefined;
+      if (held === undefined) return;
       box.setAttribute("data-still", String(!slide));
       pill.setAttribute("style", `--kit-x:${held.offsetLeft}px;--kit-w:${held.offsetWidth}px`);
     };
     const show = (id, focus) => {
-      at = Math.max(0, tabs.findIndex((tab) => tab.dataset.view === id));
+      at = tabs.findIndex((tab) => tab.dataset.view === id);
       for (const [n, tab] of tabs.entries()) { const on = n === at; tab.setAttribute("aria-selected", String(on)); tab.tabIndex = on ? 0 : -1; if (on && focus) tab.focus(); }
       place(box.isConnected);
       change?.(id);
@@ -159,13 +162,14 @@
   const markOf = (name) => { const dot = name.lastIndexOf("."); return MARKS[KINDS[dot > 0 ? name.slice(dot + 1).toLowerCase() : ""]] ?? SHEET; };
 
   /**
-   * A file, as a message names one: its kind's mark and its name. Given its path in the tree, a button the board's own script in the page
+   * A file, as a message names one: its kind's mark and its name. Given its path in the tree, the mark is the kind of the path's last
+   * part, whatever the name says, and a button the board's own script in the page
    * takes a press on, to show the file on a tab of the board, whose mark gives way to the board's under the pointer or the keyboard. The
    * kit hears no press of its own.
    */
   const file = (name, path) => path === undefined
     ? h("span", { class: "file-ref" }, h("span", { class: "mark" }, marked(markOf(name), "of-kind")), h("span", { class: "file-ref-name" }, name))
-    : h("button", { type: "button", class: "file-ref", "data-cx-file": path }, h("span", { class: "mark" }, marked(markOf(name), "of-kind"), marked(BOARD, "to-board")), h("span", { class: "file-ref-name" }, name));
+    : h("button", { type: "button", class: "file-ref", "data-cx-file": path }, h("span", { class: "mark" }, marked(markOf(path.slice(path.lastIndexOf("/") + 1)), "of-kind"), marked(BOARD, "to-board")), h("span", { class: "file-ref-name" }, name));
 
   /**
    * Questions with options, as the chat's option card asks them, for a card of the page's. `form` is the platform's: an option form

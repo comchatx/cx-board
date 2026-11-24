@@ -128,7 +128,7 @@ it("draws a file as a message names one, and given its path a button that carrie
   expect(pressed).toEqual([]);
 });
 
-it("draws a file's kind mark, which gives way to the board's under the pointer or the keyboard where a press opens it", () => {
+it("draws a file's kind mark, and beside it the board's mark where a press opens it, hidden at rest; the rule that swaps them under the pointer or the keyboard is read as written", () => {
   const { window, document, load } = page("", "kit");
   const Kit = load() as unknown as { file: (name: string, path?: string) => HTMLElement };
   const paths = (box: HTMLElement, kind: string) => [...box.querySelectorAll(`.mark > .${kind} path`)].map((one) => one.getAttribute("d"));
@@ -147,7 +147,7 @@ it("draws a file's kind mark, which gives way to the board's under the pointer o
   expect(css).toContain(":where(.kit) button.file-ref:is(:hover, :focus-visible) .mark > .to-board { visibility: visible; }");
 });
 
-it("draws views as the board's choice: one pill on --held, or the raised ground where the platform hands none, placed under the view shown", () => {
+it("draws views with one pill, placed at the offset and width the view shown is given, selection and focus following a press and a key; the pill's --held and its raised fallback are read as written", () => {
   type Views = { views: (spec: unknown) => HTMLElement };
   const shownTo: string[] = [];
   const draw = () => {
@@ -169,6 +169,28 @@ it("draws views as the board's choice: one pill on --held, or the raised ground 
   // The pill is --held, and under a platform that hands none yet the raised ground: a fallback a browser takes and happy-dom does not
   // resolve, so the rule is read as written.
   expect(css).toContain("background: var(--held, var(--raised));");
+});
+
+it("takes a file's mark from its path's last part where it is given one, the name staying the seller's words", () => {
+  const { load } = page("", "kit");
+  const Kit = load() as unknown as { file: (name: string, path?: string) => HTMLElement };
+  const kind = (box: HTMLElement) => [...box.querySelectorAll(".mark > .of-kind path")].map((one) => one.getAttribute("d"));
+  const sales = Kit.file("Sales", "reports/sales.csv"), other = Kit.file("notes.md", "reports/w46.png"), table = Kit.file("sales.csv");
+  expect([kind(sales), sales.textContent]).toEqual([kind(table), "Sales"]);
+  expect(kind(other)).toEqual(kind(Kit.file("w46.png")));
+  expect(kind(other)).not.toEqual(kind(Kit.file("notes.md")));
+});
+
+it("selects no view and draws no pill for a view shown that none of the views is, and hands that id on, as 0.3.12 did", () => {
+  const { document, load } = page("", "kit");
+  const shownTo: string[] = [];
+  const box = (load() as unknown as { views: (spec: unknown) => HTMLElement }).views({ label: "Views", views: [{ id: "a", words: "Days" }, { id: "b", words: "Weeks" }], shown: "gone", change: (id: string) => shownTo.push(id) });
+  document.body.append(box);
+  const tabs = [...box.querySelectorAll<HTMLButtonElement>(".board-view")];
+  expect([tabs.map((tab) => [tab.getAttribute("aria-selected"), tab.tabIndex]), (box.querySelector(".board-pill") as HTMLElement).hidden, shownTo]).toEqual([[["false", -1], ["false", -1]], true, ["gone"]]);
+  tabs[1]!.click();
+  expect([tabs.map((tab) => tab.getAttribute("aria-selected")), (box.querySelector(".board-pill") as HTMLElement).hidden, shownTo]).toEqual([["false", "true"], false, ["gone", "b"]]);
+  expect(css).toContain(":where(.kit) .board-pill[hidden] { display: none; }");
 });
 
 type Asked = { form: unknown; words: unknown; under?: HTMLElement; answer: (value: unknown) => void };

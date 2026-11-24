@@ -16,11 +16,14 @@ it("tells cx of the base alone: where the board is, that a file with a title is 
   for (const gone of ["todo/", "done/", "已读", "Mark as read", "kind:", "proposal", "choice", "交给 cx", "忽略", "deleted"]) expect(skill, gone).not.toContain(gone);
 });
 
-it("tells cx how a page is written: page.html at the board's top, drawn in a frame under a row saying cx made it, reaching only https addresses, built from the elements, and reaching the board through cxBoard", () => {
+it("tells cx how a page is written: page.html at the board's top, drawn in a frame under a row saying cx made it, what its policy lets it load, built from the elements, and reaching the board through cxBoard", () => {
   for (const said of [
     "`page.html` at its top is drawn as that page in a frame",
     "a row saying cx made it",
-    "it reaches none of the seller's ComChatX, its pages, its storage or the seller's sign-in", "Outside its board it reaches only `https` addresses", "a file reaches the seller through `cxBoard.save`.",
+    "It does not read the app's page, its storage or the seller's sign-in itself: what it has of the seller's comes to it through `cxBoard`.",
+    "a script, a style sheet, a font, an image, a sound or a framed page from an `https` address, a fetch to one and a form sent to one", "none of these over plain `http`",
+    "Whether the page may read what another site answers is that site's to allow.", "A link the seller presses opens in a new tab.",
+    "A file reaches the seller as a download: by the page's own link, or by `cxBoard.save`, which the app saves from its own origin at a press.",
     "A page is at most 5 MiB (5,242,880 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load.",
     "the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline",
     "a file written with a shell command or a script meets none of them until the seller opens the page or the tab",
