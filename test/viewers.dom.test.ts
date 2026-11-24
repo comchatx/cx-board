@@ -18,7 +18,8 @@ function viewer(page: string, markdown: (text: string) => Promise<string> = asyn
   const window = new Window({ url: "https://pages.invalid/" });
   windows.push(window);
   const html = readFileSync(join(ROOT, page), "utf8");
-  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((one) => one[1]!);
+  // The board puts the elements' script into the page before the page's own code.
+  const scripts = [readFileSync(join(ROOT, "kit", "kit.js"), "utf8"), ...[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((one) => one[1]!)];
   window.document.write(html.replace(/<script>[\s\S]*?<\/script>/g, ""));
   const heard: ((file: File) => void)[] = [];
   const asked: string[] = [];
@@ -30,12 +31,13 @@ function viewer(page: string, markdown: (text: string) => Promise<string> = asyn
 }
 const at = { size: 1, modified: 1 };
 
-it("declares the viewers by the kinds they draw, each page in the package, the picture's and the Word file's taking bytes", () => {
+it("declares the viewers by the kinds they draw, each page in the package, the picture's, the Word file's and the Excel file's taking bytes", () => {
   expect(manifest.comchatx.viewers).toEqual([
     { files: ["md", "markdown"], page: "viewers/markdown.html" },
     { files: ["csv", "tsv"], page: "viewers/table.html" },
     { files: ["png", "jpg", "jpeg", "gif", "webp"], page: "viewers/picture.html", bytes: true },
     { files: ["docx"], page: "viewers/word.html", bytes: true },
+    { files: ["xlsx"], page: "viewers/sheet.html", bytes: true },
   ]);
   for (const one of manifest.comchatx.viewers) expect(readFileSync(join(ROOT, one.page), "utf8")).toMatch(/<body class="kit">/);
 });
@@ -62,6 +64,12 @@ it("draws a CSV with its first row as the head, quotes, commas and line breaks i
   expect(rows()).toEqual([["TH:a", 'TH:"b"'], ["TD:1", "TD:2"]]);
   await hand({ path: "x.csv", name: "x.csv", ...at, text: "<b>raw</b>" });
   expect([rows(), document.querySelector("b")]).toEqual([[["TH:<b>raw</b>"]], null]);
+});
+
+it("keeps a CSV's last row where it is one empty quoted cell with no line break after it", async () => {
+  const { document, hand } = viewer("viewers/table.html");
+  await hand({ path: "x.csv", name: "x.csv", ...at, text: 'note\n""' });
+  expect([...document.querySelectorAll("tr")].map((row) => [...row.children].map((cell) => `${cell.tagName}:${cell.textContent}`))).toEqual([["TH:note"], ["TD:"]]);
 });
 
 it("draws a picture whole from the bytes it is handed, by its kind, named by the file", async () => {
@@ -128,4 +136,38 @@ it("draws nothing for a file that is no Word file, and clears the one drawn befo
   await vi.waitFor(() => expect(box.textContent).toBe("Kept"));
   await hand(word(Buffer.from("a locked file, or none at all").toString("base64")));
   await vi.waitFor(() => expect(box.innerHTML).toBe(""));
+});
+
+const XLSX = new Function(`${readFileSync(join(ROOT, "scripts", "sheetjs", "xlsx.mini.min.js"), "utf8")}; return XLSX;`)() as {
+  utils: { book_new: () => { Workbook?: { Sheets: { Hidden: number }[] } }; aoa_to_sheet: (rows: unknown[][]) => Record<string, unknown>; book_append_sheet: (book: unknown, sheet: unknown, name: string) => void };
+  write: (book: unknown, options: { type: "base64"; bookType: "xlsx" }) => string;
+};
+/** An Excel file of the named sheets, the hidden ones hidden, made as Excel saves one. */
+function xlsx(sheets: Record<string, unknown[][]>, hidden: readonly string[] = []): File {
+  const book = XLSX.utils.book_new();
+  for (const [name, rows] of Object.entries(sheets)) XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(rows), name);
+  book.Workbook = { Sheets: Object.keys(sheets).map((name) => ({ Hidden: hidden.includes(name) ? 1 : 0 })) };
+  return { path: "reports/w46.xlsx", name: "w46.xlsx", ...at, bytes: XLSX.write(book, { type: "base64", bookType: "xlsx" }) };
+}
+const drawn = (document: Window["document"]) => [...document.querySelectorAll("tr")].map((row) => [...row.children].map((cell) => `${cell.tagName}:${cell.textContent}`));
+
+it("draws an Excel file's sheets one at a time under a switch of their names, hidden ones left out, each cell as Excel shows it", async () => {
+  const { document, hand } = viewer("viewers/sheet.html");
+  const sheet = (rows: unknown[][]) => rows;
+  await hand(xlsx({ Sales: sheet([["sku", "units", "share"], ["B01", 3, { t: "n", v: 0.25, z: "0%" }], ["<b>B02</b>", 1200, ""]]), Costs: sheet([["fee"], [1.5]]), Workings: sheet([["secret"]]) }, ["Workings"]));
+  const names = () => [...document.querySelectorAll('[role="tab"]')].map((tab) => `${tab.textContent}:${tab.getAttribute("aria-selected")}`);
+  expect(names()).toEqual(["Sales:true", "Costs:false"]);
+  expect(document.querySelector('[role="tablist"]')!.getAttribute("aria-label")).toBe("w46.xlsx");
+  expect(drawn(document)).toEqual([["TH:sku", "TH:units", "TH:share"], ["TD:B01", "TD:3", "TD:25%"], ["TD:<b>B02</b>", "TD:1200", "TD:"]]);
+  expect(document.querySelector("b")).toBeNull();
+  document.querySelectorAll<Window["HTMLElement"]["prototype"]>('[role="tab"]')[1]!.click();
+  expect([names(), drawn(document)]).toEqual([["Sales:false", "Costs:true"], [["TH:fee"], ["TD:1.5"]]]);
+});
+
+it("draws an Excel file of one sheet with no switch, and an encrypted file as nothing, clearing what was drawn", async () => {
+  const { document, hand } = viewer("viewers/sheet.html");
+  await hand(xlsx({ Only: [["a"], ["1"]] }));
+  expect([document.querySelector('[role="tablist"]'), drawn(document)]).toEqual([null, [["TH:a"], ["TD:1"]]]);
+  await hand({ path: "locked.xlsx", name: "locked.xlsx", ...at, bytes: Buffer.concat([Buffer.from("d0cf11e0a1b11ae1", "hex"), Buffer.alloc(600)]).toString("base64") });
+  expect([document.querySelector('[role="tablist"]'), document.querySelector("#file")!.innerHTML]).toEqual([null, ""]);
 });

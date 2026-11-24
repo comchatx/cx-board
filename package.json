@@ -86,6 +86,13 @@
         ],
         "page": "viewers/word.html",
         "bytes": true
+      },
+      {
+        "files": [
+          "xlsx"
+        ],
+        "page": "viewers/sheet.html",
+        "bytes": true
       }
     ]
   },

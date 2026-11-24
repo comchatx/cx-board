@@ -5,14 +5,26 @@ body { margin: 0; }
 .markdown table { width: max-content; min-width: 100%; }
 .markdown thead th { position: sticky; top: 0; }
 </style></head>
-<body class="kit"><div class="markdown" id="file"></div><script>
-// A table file of the seller's computer, edge to edge, its first row the head: a CSV by its quotes and commas, a TSV by its tabs.
+<body class="kit"><div class="markdown" id="file"></div><script>// A table edge to edge, its first row the head that stays as the rest scrolls, each cell drawn as its words.
+const tableOf = (rows) => {
+  const cells = (tag, row) => { const line = document.createElement("tr"); for (const one of row) { const cell = document.createElement(tag); cell.textContent = one; line.append(cell); } return line; };
+  const [head = [], ...body] = rows;
+  const table = document.createElement("table");
+  const thead = document.createElement("thead"), tbody = document.createElement("tbody");
+  thead.append(cells("th", head));
+  for (const row of body) tbody.append(cells("td", row));
+  table.append(thead, tbody);
+  return table;
+};
+</script><script>
+// A table file of the seller's computer: a CSV by its quotes and commas, a TSV by its tabs.
 const box = document.getElementById("file");
 const rowsOf = (text, tabs) => {
   const rows = [];
-  let row = [], cell = "", quoted = false;
+  let row = [], cell = "", quoted = false, open = false;
   for (let at = 0; at < text.length; at++) {
     const c = text[at];
+    open = true;
     if (quoted) {
       if (c !== '"') cell += c;
       else if (text[at + 1] === '"') { cell += '"'; at++; }
@@ -21,20 +33,11 @@ const rowsOf = (text, tabs) => {
     else if (c === (tabs ? "\t" : ",")) { row.push(cell); cell = ""; }
     else if (c === "\n" || c === "\r") {
       if (c === "\r" && text[at + 1] === "\n") at++;
-      row.push(cell); rows.push(row); row = []; cell = "";
+      row.push(cell); rows.push(row); row = []; cell = ""; open = false;
     } else cell += c;
   }
-  if (cell !== "" || row.length > 0) { row.push(cell); rows.push(row); }
+  if (open) { row.push(cell); rows.push(row); }
   return rows;
 };
-const cells = (tag, row) => { const line = document.createElement("tr"); for (const one of row) { const cell = document.createElement(tag); cell.textContent = one; line.append(cell); } return line; };
-cxBoard.on("file", (file) => {
-  const [head = [], ...body] = rowsOf((file.text ?? "").replace(/^﻿/, ""), /\.tsv$/i.test(file.name));
-  const table = document.createElement("table");
-  const thead = document.createElement("thead"), tbody = document.createElement("tbody");
-  thead.append(cells("th", head));
-  for (const row of body) tbody.append(cells("td", row));
-  table.append(thead, tbody);
-  box.replaceChildren(table);
-});
+cxBoard.on("file", (file) => box.replaceChildren(tableOf(rowsOf((file.text ?? "").replace(/^﻿/, ""), /\.tsv$/i.test(file.name)))));
 </script></body></html>

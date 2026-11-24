@@ -1,0 +1,32 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+body { margin: 0; }
+.markdown { margin: 0; }
+.markdown table { width: max-content; min-width: 100%; }
+.markdown thead th { position: sticky; top: 0; }
+</style></head>
+<body class="kit"><div class="markdown" id="file"></div><script src="part:table-draw.js"></script><script>
+// A table file of the seller's computer: a CSV by its quotes and commas, a TSV by its tabs.
+const box = document.getElementById("file");
+const rowsOf = (text, tabs) => {
+  const rows = [];
+  let row = [], cell = "", quoted = false, open = false;
+  for (let at = 0; at < text.length; at++) {
+    const c = text[at];
+    open = true;
+    if (quoted) {
+      if (c !== '"') cell += c;
+      else if (text[at + 1] === '"') { cell += '"'; at++; }
+      else quoted = false;
+    } else if (c === '"' && cell === "" && !tabs) quoted = true;
+    else if (c === (tabs ? "\t" : ",")) { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[at + 1] === "\n") at++;
+      row.push(cell); rows.push(row); row = []; cell = ""; open = false;
+    } else cell += c;
+  }
+  if (open) { row.push(cell); rows.push(row); }
+  return rows;
+};
+cxBoard.on("file", (file) => box.replaceChildren(tableOf(rowsOf((file.text ?? "").replace(/^﻿/, ""), /\.tsv$/i.test(file.name)))));
+</script></body></html>
