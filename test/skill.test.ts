@@ -22,7 +22,7 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
     "a row saying cx made it",
     "It does not read the app's page, its storage or the seller's sign-in itself: what it has of the seller's comes to it through `cxBoard`.",
     "a script, a style sheet, a font, an image, a sound or a framed page from an `https` address, a fetch to one and a form sent to one", "none of these over plain `http`",
-    "Whether the page may read what another site answers is that site's to allow.", "A link the seller presses opens in a new tab.",
+    "Whether the page may read what another site answers is that site's to allow.", "A link drawn by `cxBoard.markdown` opens in a new tab.", "Its policy allows its own inline script and style;",
     "A file reaches the seller as a download: by the page's own link, or by `cxBoard.save`, which the app saves from its own origin at a press.",
     "A page is at most 5 MiB (5,242,880 bytes), and the data written inline in it counts toward that. A larger `page.html` is not shown: the tab reads 页面没有加载出来。 / This page did not load.",
     "the page reads each with `cxBoard.read`, and that is how a page shows more than it can hold inline",
