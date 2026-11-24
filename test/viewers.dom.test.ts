@@ -85,16 +85,17 @@ const DOT = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwA
 const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
 const REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 const rels = (list: readonly (readonly [id: string, type: string, target: string])[]) =>
-  `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${list.map(([id, type, target]) => `<Relationship Id="${id}" Type="${REL}/${type}" Target="${target}"${target.includes(":") ? ' TargetMode="External"' : ""}/>`).join("")}</Relationships>`;
+  `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${list.map(([id, type, target]) => `<Relationship Id="${id}" Type="${type.includes("://") ? type : `${REL}/${type}`}" Target="${target}"${target.includes(":") ? ' TargetMode="External"' : ""}/>`).join("")}</Relationships>`;
 const run = (text: string) => `<w:r><w:t xml:space="preserve">${text}</w:t></w:r>`;
 const link = (id: string, text: string) => `<w:hyperlink r:id="${id}">${run(text)}</w:hyperlink>`;
 
 /** A Word file made as Word makes one: its parts zipped, each named in its relationships. */
-async function docx(body: string, more: { footnote?: string } = {}): Promise<string> {
+async function docx(body: string, more: { footnote?: string; styleMap?: string } = {}): Promise<string> {
   const zip = new JSZip();
   zip.file("[Content_Types].xml", '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
   zip.file("_rels/.rels", rels([["rId1", "officeDocument", "word/document.xml"]]));
-  zip.file("word/_rels/document.xml.rels", rels([["rIdRun", "hyperlink", "javascript:parent.postMessage(1)"], ["rIdWeb", "hyperlink", "https://example.com/"], ["rIdDot", "image", "media/dot.png"], ["rIdStyles", "styles", "styles.xml"], ["rIdNotes", "footnotes", "footnotes.xml"]]));
+  zip.file("word/_rels/document.xml.rels", rels([["rIdRun", "hyperlink", "javascript:parent.postMessage(1)"], ["rIdWeb", "hyperlink", "https://example.com/"], ["rIdDot", "image", "media/dot.png"], ["rIdStyles", "styles", "styles.xml"], ["rIdNotes", "footnotes", "footnotes.xml"], ...(more.styleMap === undefined ? [] : [["rMammothStyleMap", "http://schemas.zwobble.org/mammoth/style-map", "/mammoth/style-map"] as const])]));
+  if (more.styleMap !== undefined) zip.file("mammoth/style-map", more.styleMap);
   zip.file("word/styles.xml", `<w:styles ${NS}><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/></w:style></w:styles>`);
   zip.file("word/media/dot.png", DOT, { base64: true });
   zip.file("word/document.xml", `<w:document ${NS}><w:body>${body}</w:body></w:document>`);
@@ -103,6 +104,16 @@ async function docx(body: string, more: { footnote?: string } = {}): Promise<str
   return zip.generateAsync({ type: "base64" });
 }
 const word = (bytes: string): File => ({ path: "reports/w46.docx", name: "w46.docx", ...at, bytes });
+
+it("draws a Word file by the built-in styles alone, a style map the file carries left unread", async () => {
+  const { document, hand } = viewer("viewers/word.html");
+  const map = "p => iframe.planted[src='https://example.com/'][data-from='file']:fresh\nr => script.planted";
+  hand(word(await docx(`<w:p>${run("Plain words")}</w:p>`, { styleMap: map })));
+  await vi.waitFor(() => expect(document.querySelector("#file p")?.textContent).toBe("Plain words"));
+  const drawn = [...document.querySelectorAll("#file *")];
+  expect(drawn.map((one) => one.tagName)).toEqual(["P"]);
+  expect(drawn.flatMap((one) => one.getAttributeNames())).toEqual([]);
+});
 
 it("draws a Word file in the answer's own type: its headings, words, tables and pictures, each link as its words alone", async () => {
   const { document, hand } = viewer("viewers/word.html");

@@ -26,7 +26,7 @@ let shown = 0;
 cxBoard.on("file", async (file) => {
   const turn = ++shown;
   const bytes = Uint8Array.from(atob(file.bytes), (letter) => letter.charCodeAt(0));
-  const html = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer }, { transformDocument: unlinked }).then((done) => done.value, () => undefined);
+  const html = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer }, { transformDocument: unlinked, includeEmbeddedStyleMap: false }).then((done) => done.value, () => undefined);
   if (turn !== shown) return;
   if (html === undefined) box.replaceChildren(unreadable());
   else box.innerHTML = html;
