@@ -68,8 +68,11 @@ it("loads nothing and speaks across no frame's edge: the platform inlines both f
 it("carries no words of its own: no Chinese, Japanese or Korean, no English phrase in the script's strings, and no generated text in the stylesheet", () => {
   const scripts = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
   expect(css).not.toMatch(scripts);
-  expect(js).not.toMatch(scripts);
-  const strings = literals(js);
+  // The one exception is the chat's 引用, its word and its name, which the kit floats over a selection where the board gives a quote.
+  const QUOTE_WORDS = ["引用", "Quote", "引用选中的文字", "Quote the selected words"];
+  const strings = literals(js).filter((text) => !QUOTE_WORDS.includes(text));
+  expect(strings.filter((text) => scripts.test(text))).toEqual([]);
+  expect(js.replace(/^\s*\/\/.*$/gm, "").replace(/"[^"\n]*"/g, "")).not.toMatch(scripts);
   expect(strings).toContain("kit-bar");
   // A phrase is two words of letters side by side; class names, keys, event names and an icon's path are not, and the script's
   // directive is the language's.
@@ -154,7 +157,11 @@ it("holds every rule under the class a page takes the kit by, so a page that doe
 });
 
 it("touches nothing at load that it did not make: no write to the page's root or body, no search for the page's own elements, no listener before a label is shown", () => {
-  const code = js.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  // 引用 over a selection is the one part that hears the page from its load, and only where the board gives a quote: it is set apart here.
+  const all = js.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  expect(all).toMatch(/^ {2}if \(typeof window\.cxBoard\?\.quote === "function"\) quotePick\(window\.cxBoard\);$/m);
+  const code = all.replace(/^ {2}function quotePick[\s\S]*?^ {2}}$/m, "").replace(/^ {2}if \(typeof window\.cxBoard.*$/m, "");
+  expect(code).not.toMatch(/quotePick|selectionchange/);
   for (const reach of ["document.body.", "document.documentElement.", "root.", "querySelector", "getElementsBy", "getElementById", "MutationObserver", "document.addEventListener", "document.write", "classList", ".dataset.theme"]) {
     const uses = code.split(reach).length - 1;
     // The label is put in the page's body only where no `.kit` holds the element it labels; `root.dataset.locale` and `root.lang` are read, never written.

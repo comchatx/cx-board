@@ -1,8 +1,9 @@
 // The elements' script: what the board puts into a page, after `kit.css` and before the page's own code. It gives the elements that need
 // a script, a chart, a timeline, a switch and questions with options, with what a pointer and a keyboard do on them, and a file as a
-// message names one. A page reaches all of it through `Kit`. It carries no words: every line it draws is the page's. Nothing here speaks
-// across the frame's edge or loads anything. Loading it defines `Kit` and nothing else: it
-// touches no element and hears no event until the page makes an element with it, and its rules in `kit.css` hold only under `.kit`.
+// message names one. A page reaches all of it through `Kit`. It carries no words but the chat's 引用: every other line it draws is the
+// page's. It loads nothing, and speaks across the frame's edge only to quote. Loading it defines `Kit` and, where the board gives
+// pages a quote, follows the page's selection to float 引用 over it; it touches no element of the page's and draws nothing else until
+// the page makes an element with it, and its rules in `kit.css` hold only under `.kit`.
 (() => {
   "use strict";
   const root = document.documentElement;
@@ -245,6 +246,55 @@
     for (const child of node.children) { if (child.dataset.focus === name) return child; const found = held(child, name); if (found !== undefined) return found; }
     return undefined;
   }
+
+  // ---- 引用 over words selected on the page: the chat's own float, which puts them over the message box as its quote ----
+  // It is drawn only where the board says a chat takes a quote, never in a field or on a control, and only for a pointer (no Tab
+  // stop, as the chat's is not); Escape puts it away and leaves the words selected. Words inside an element that names a file
+  // with `data-file` are quoted from that card, by its title. Its two lines are the chat's `quote.quote` and its name for it.
+  const QUOTE = ["M10 6.5C7 7.5 5 9.8 5 13v4.5h5V13H7.2", "M19 6.5c-3 1-5 3.3-5 6.5v4.5h5V13h-2.8"];
+  const NOT_QUOTED = "input, textarea, select, button, [contenteditable], .kit-quote-pick";
+  const TITLE_MAX = 80, TEXT_MAX = 2000;
+  function quotePick(board) {
+    const pick = h("button", { type: "button", class: "kit-quote-pick", tabindex: "-1", hidden: true }, icon(...QUOTE), h("span", {}));
+    let shown, put = false;
+    const chosen = () => {
+      const selection = getSelection();
+      if (selection === null || selection.isCollapsed || selection.rangeCount === 0 || board.context?.quote !== true) return undefined;
+      const from = selection.anchorNode instanceof Element ? selection.anchorNode : selection.anchorNode?.parentElement;
+      const host = from?.closest(".kit");
+      if (!host || from.closest(NOT_QUOTED)) return undefined;
+      const range = selection.getRangeAt(0), text = range.toString().replace(/\s+/g, " ").trim();
+      if (text === "") return undefined;
+      const card = from.closest("[data-file]");
+      const title = card?.querySelector(".entry-title")?.textContent.replace(/\s+/g, " ").trim().slice(0, TITLE_MAX);
+      return { host, range, given: { text: text.slice(0, TEXT_MAX), ...(card ? { card: card.dataset.file } : {}), ...(title ? { title } : {}) } };
+    };
+    const place = () => {
+      shown = put ? undefined : chosen();
+      if (shown === undefined) { pick.hidden = true; return; }
+      if (pick.parentElement !== shown.host) shown.host.append(pick);
+      pick.lastChild.textContent = zh() ? "引用" : "Quote";
+      pick.setAttribute("aria-label", zh() ? "引用选中的文字" : "Quote the selected words");
+      pick.hidden = false;
+      const line = shown.range.getClientRects()[0] ?? shown.range.getBoundingClientRect();
+      pick.style.left = `${Math.max(8, Math.min(line.left, innerWidth - pick.offsetWidth - 8))}px`;
+      pick.style.top = `${Math.max(8, line.top - 6 - pick.offsetHeight)}px`;
+    };
+    pick.addEventListener("mousedown", (event) => event.preventDefault());
+    pick.addEventListener("click", () => {
+      if (shown === undefined) return;
+      const given = shown.given;
+      getSelection()?.removeAllRanges();
+      pick.hidden = true;
+      void board.quote(given).catch(() => {});
+    });
+    document.addEventListener("selectionchange", () => { put = false; requestAnimationFrame(place); });
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !pick.hidden) { put = true; pick.hidden = true; } });
+    addEventListener("scroll", () => { if (!pick.hidden) place(); }, { passive: true, capture: true });
+    addEventListener("resize", () => { if (!pick.hidden) place(); });
+    board.on?.("context", () => { if (!pick.hidden) place(); });
+  }
+  if (typeof window.cxBoard?.quote === "function") quotePick(window.cxBoard);
 
   window.Kit = Object.freeze({
     get lang() { return zh() ? "zh" : "en"; },
