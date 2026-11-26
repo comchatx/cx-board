@@ -7,9 +7,10 @@ import { fileURLToPath } from "node:url";
 import { DefaultResourceLoader, SettingsManager } from "@earendil-works/pi-coding-agent";
 import { afterEach, expect, it } from "vitest";
 import { viewerFiles } from "../scripts/viewers.mjs";
+import { githubKit, kitCss } from "../scripts/kit-github.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const manifest = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { pi: unknown; files: unknown; comchatx: { skills: Record<string, unknown> } };
+const manifest = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { pi: unknown; files: unknown; devDependencies: Record<string, string>; comchatx: { skills: Record<string, unknown> } };
 const scratches: string[] = [];
 afterEach(() => { for (const scratch of scratches.splice(0)) rmSync(scratch, { recursive: true, force: true }); });
 
@@ -37,7 +38,7 @@ it("ships its skills, the page's elements, its viewers, its README in English an
   const answer = JSON.parse(execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: ROOT, encoding: "utf8" })) as { files: { path: string }[] }[] | Record<string, { files: { path: string }[] }>;
   const packed = Array.isArray(answer) ? answer : Object.values(answer);
   const skills = walk(join(ROOT, "skills")).map((path) => relative(ROOT, path));
-  expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", "viewers/markdown.html", "viewers/picture.html", "viewers/table.html", "viewers/word.html", "viewers/sheet.html", "viewers/pdf.html", "viewers/licences/mammoth.txt", "viewers/licences/sheetjs.txt", "viewers/licences/pdfjs-dist.txt", "viewers/licences/pdfjs-dist-cmaps.txt", ...skills].sort());
+  expect(packed[0]!.files.map((file) => file.path).sort()).toEqual(["LICENSE", "README.md", "README.zh-CN.md", "package.json", "kit/kit.css", "kit/kit.js", "kit/theme.json", "kit/licences/github-markdown-css.txt", "viewers/markdown.html", "viewers/picture.html", "viewers/table.html", "viewers/word.html", "viewers/sheet.html", "viewers/pdf.html", "viewers/licences/mammoth.txt", "viewers/licences/sheetjs.txt", "viewers/licences/pdfjs-dist.txt", "viewers/licences/pdfjs-dist-cmaps.txt", ...skills].sort());
   expect(manifest.files).toEqual(["skills", "kit", "viewers", "!viewers/src", "README.zh-CN.md"]);
 });
 
@@ -52,6 +53,14 @@ it("holds each assembled viewer page and licence as the script makes it from its
   expect([...made.keys()].sort()).toEqual(["viewers/licences/mammoth.txt", "viewers/licences/pdfjs-dist-cmaps.txt", "viewers/licences/pdfjs-dist.txt", "viewers/licences/sheetjs.txt", "viewers/pdf.html", "viewers/sheet.html", "viewers/table.html", "viewers/word.html"]);
   for (const [path, text] of made) expect(readFileSync(join(ROOT, path), "utf8") === text, `${path} is not what \`npm run viewers\` makes`).toBe(true);
   for (const path of made.keys()) if (path.endsWith(".html")) expect(Buffer.byteLength(made.get(path)!), path).toBeLessThanOrEqual(5 * 1024 * 1024);
+});
+
+it("holds GitHub's Markdown rules in kit/kit.css, and their licence beside it, as the script makes them from the pinned github-markdown-css", () => {
+  expect(manifest.devDependencies["github-markdown-css"]).toBe("5.9.0");
+  const css = readFileSync(join(ROOT, "kit", "kit.css"), "utf8");
+  expect(css === kitCss(css), "kit/kit.css is not what `npm run kit` makes").toBe(true);
+  expect(readFileSync(join(ROOT, "kit", "licences", "github-markdown-css.txt"), "utf8")).toBe(githubKit().licence);
+  expect(githubKit().licence).toContain("MIT License");
 });
 
 it("carries the Excel reader as the one file of SheetJS Community Edition 0.20.3 that DEVELOPING.md names by its sha256", () => {

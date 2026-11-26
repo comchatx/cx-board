@@ -46,14 +46,14 @@ it("declares the viewers by the kinds they draw, each page in the package, the p
 it("draws a Markdown file through the board's own pipeline each time it is handed, the last drawing kept where two cross", async () => {
   const { document, hand, asked } = viewer("viewers/markdown.html");
   await hand({ path: "reports/w46.md", name: "w46.md", ...at, text: "# Week 46" });
-  expect([asked, document.querySelector(".markdown")!.innerHTML]).toEqual([["# Week 46"], "<p># Week 46</p>"]);
+  expect([asked, document.querySelector(".markdown-body")!.innerHTML]).toEqual([["# Week 46"], "<p># Week 46</p>"]);
   const slow: ((html: string) => void)[] = [];
   const crossing = viewer("viewers/markdown.html", (text) => (text === "old" ? new Promise((done) => slow.push(done)) : Promise.resolve(`<p>${text}</p>`)));
   await crossing.hand({ path: "a.md", name: "a.md", ...at, text: "old" });
   await crossing.hand({ path: "a.md", name: "a.md", ...at, text: "new" });
   slow[0]!("<p>old</p>");
   await settle();
-  expect(crossing.document.querySelector(".markdown")!.innerHTML).toBe("<p>new</p>");
+  expect(crossing.document.querySelector(".markdown-body")!.innerHTML).toBe("<p>new</p>");
 });
 
 it("draws a CSV with its first row as the head, quotes, commas and line breaks inside quotes kept as words, and a TSV by its tabs", async () => {
