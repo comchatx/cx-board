@@ -333,14 +333,38 @@ it("floats the chat's 引用 over words selected on a kit page, and quotes them 
   expect(quoted[1]).toEqual({ text: "Words" });
 });
 
-it("quotes the words selected and the card's title as they stand, however long: the board holds a quote to what a card holds", async () => {
-  const long = "Order more. ".repeat(250).trim(), named = "Restock ".repeat(15).trim();
+it("names a card only when it holds the whole selection: words run from one card into the next are the page's, either way they are selected", async () => {
+  const { window, document, load } = page(`<article class="entry" data-file="inbox/a.md"><h3 class="entry-title">First card</h3><p id="a">Words of the first.</p></article>
+<article class="entry" data-file="inbox/b.md"><h3 class="entry-title">Second card</h3><p id="b">Words of the second.</p></article>`, "kit");
+  const { quoted } = quoting(window);
+  load();
+  const a = document.getElementById("a")!.firstChild!, b = document.getElementById("b")!.firstChild!;
+  const pick = () => document.querySelector(".kit-quote-pick") as unknown as HTMLButtonElement;
+  const across = async (anchor: unknown, at: number, focus: unknown, to: number) => {
+    window.getSelection()!.setBaseAndExtent(anchor as never, at, focus as never, to);
+    document.dispatchEvent(new window.Event("selectionchange") as never);
+    await settle(window);
+    pick().click();
+  };
+  await across(a, 0, b, 5);
+  await across(b, 5, a, 0);
+  await across(b, 20, b, 9);
+  expect(quoted).toEqual([
+    { text: "Words of the first. Second cardWords" },
+    { text: "Words of the first. Second cardWords" },
+    { text: "the second.", card: "inbox/b.md", title: "Second card" },
+  ]);
+});
+
+it("quotes the words selected and the card's title whole past the board's bound: the platform, not the kit, refuses a longer quote", async () => {
+  const long = "再订一批货，周五前到。 ".repeat(1200).trim(), named = "Restock ".repeat(15).trim();
   const { window, document, load } = page(`<article class="entry" data-file="inbox/long.md"><h3 class="entry-title">${named}</h3><p id="w">${long}</p></article>`, "kit");
   const { quoted } = quoting(window);
   load();
   choose(window, document, document.getElementById("w")!.firstChild!);
   await settle(window);
   (document.querySelector(".kit-quote-pick") as unknown as HTMLButtonElement).click();
+  expect(new TextEncoder().encode(long + named).length).toBeGreaterThan(32 * 1024);
   expect(quoted).toEqual([{ text: long, card: "inbox/long.md", title: named }]);
 });
 

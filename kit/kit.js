@@ -250,7 +250,7 @@
   // ---- 引用 over words selected on the page: the chat's own float, which puts them over the message box as its quote ----
   // It is drawn only where the board says a chat takes a quote, never in a field or on a control, and only for a pointer (no Tab
   // stop, as the chat's is not); Escape puts it away and leaves the words selected. Words inside an element that names a file
-  // with `data-file` are quoted from that card, by its title. Its two lines are the chat's `quote.quote` and its name for it.
+  // with `data-file` are quoted from that card, by its title, when that card holds all of them. Its two lines are the chat's `quote.quote` and its name for it.
   const QUOTE = ["M10 6.5C7 7.5 5 9.8 5 13v4.5h5V13H7.2", "M19 6.5c-3 1-5 3.3-5 6.5v4.5h5V13h-2.8"];
   const NOT_QUOTED = "input, textarea, select, button, [contenteditable], .kit-quote-pick";
   function quotePick(board) {
@@ -264,7 +264,9 @@
       if (!host || from.closest(NOT_QUOTED)) return undefined;
       const range = selection.getRangeAt(0), text = range.toString().replace(/\s+/g, " ").trim();
       if (text === "") return undefined;
-      const card = from.closest("[data-file]");
+      // The card that holds the whole selection, if one does; words that run from one card into another are the page's.
+      const common = range.commonAncestorContainer instanceof Element ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement;
+      const card = common?.closest("[data-file]");
       const title = card?.querySelector(".entry-title")?.textContent.replace(/\s+/g, " ").trim();
       return { host, range, given: { text, ...(card ? { card: card.dataset.file } : {}), ...(title ? { title } : {}) } };
     };
