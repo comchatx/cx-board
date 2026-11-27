@@ -53,8 +53,8 @@ body.kit { margin: 0; }
 :where(.kit) .markdown th { background: var(--wash); }
 :where(.kit) .markdown pre { padding: var(--space-4) var(--space-5); border-radius: var(--radius); background: var(--wash); }
 /* Inline code is GitHub's grey block, as a whole read draws it (`.markdown-body code` below). */
-:where(.kit) .markdown :not(pre) > code { padding: .2em .4em; border-radius: 6px; background: #818b981f; font-size: 85%; white-space: break-spaces; }
-:where([data-theme="dark"]) :where(.kit) .markdown :not(pre) > code { background: #656c7633; }
+:where(.kit) .markdown code:not(pre code) { padding: .2em .4em; border-radius: 6px; background: #818b981f; font-size: 85%; white-space: break-spaces; }
+:where([data-theme="dark"]) :where(.kit) .markdown code:not(pre code) { background: #656c7633; }
 :where(.kit) .markdown blockquote { margin: var(--space-4) 0; padding-left: var(--space-5); border-left: 3px solid var(--line); color: var(--quiet); }
 
 /*

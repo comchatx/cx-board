@@ -80,10 +80,12 @@ it("changes two things of a card waiting on the board: inline code is GitHub's g
 it("leaves a fenced block on a waiting card as it was: its code keeps the block's size and wrapping beside inline code that takes GitHub's", async () => {
   for (const theme of ["light", "dark"] as const) {
     const page = await browser.newPage();
-    await page.setContent(`<!doctype html><html data-theme="${theme}"><head><style>${VALUES}</style><style>${read("kit/kit.css")}</style></head><body class="kit"><div class="markdown"><p>Set <code>Material</code>.</p><pre><code>a  b</code></pre></div></body></html>`);
+    await page.setContent(`<!doctype html><html data-theme="${theme}"><head><style>${VALUES}</style><style>${read("kit/kit.css")}</style></head><body class="kit"><div class="markdown"><p>Set <code>Material</code>.</p><code id="bare">Bare</code><pre><code>a  b</code></pre><pre><span><code id="deep">c  d</code></span></pre></div></body></html>`);
     const block = await style(page, ".markdown pre", ["font-size", "white-space"]);
     expect(await style(page, ".markdown pre code", ["font-size", "white-space", "background-color", "padding-left"])).toEqual({ "font-size": block["font-size"], "white-space": block["white-space"], "background-color": "rgba(0, 0, 0, 0)", "padding-left": "0px" });
     expect(await style(page, ".markdown p code", ["font-size", "white-space"])).toEqual({ "font-size": "11.9px", "white-space": "break-spaces" });
+    expect(await style(page, "#bare", ["font-size", "white-space", "background-color"])).toEqual({ "font-size": "11.9px", "white-space": "break-spaces", "background-color": theme === "light" ? "rgba(129, 139, 152, 0.12)" : "rgba(101, 108, 118, 0.2)" });
+    expect(await style(page, "#deep", ["font-size", "white-space", "background-color", "padding-left"])).toEqual({ "font-size": block["font-size"], "white-space": block["white-space"], "background-color": "rgba(0, 0, 0, 0)", "padding-left": "0px" });
     await page.close();
   }
 });
