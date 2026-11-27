@@ -253,7 +253,6 @@
   // with `data-file` are quoted from that card, by its title. Its two lines are the chat's `quote.quote` and its name for it.
   const QUOTE = ["M10 6.5C7 7.5 5 9.8 5 13v4.5h5V13H7.2", "M19 6.5c-3 1-5 3.3-5 6.5v4.5h5V13h-2.8"];
   const NOT_QUOTED = "input, textarea, select, button, [contenteditable], .kit-quote-pick";
-  const TITLE_MAX = 80, TEXT_MAX = 2000;
   function quotePick(board) {
     const pick = h("button", { type: "button", class: "kit-quote-pick", tabindex: "-1", hidden: true }, icon(...QUOTE), h("span", {}));
     let shown, put = false;
@@ -266,8 +265,8 @@
       const range = selection.getRangeAt(0), text = range.toString().replace(/\s+/g, " ").trim();
       if (text === "") return undefined;
       const card = from.closest("[data-file]");
-      const title = card?.querySelector(".entry-title")?.textContent.replace(/\s+/g, " ").trim().slice(0, TITLE_MAX);
-      return { host, range, given: { text: text.slice(0, TEXT_MAX), ...(card ? { card: card.dataset.file } : {}), ...(title ? { title } : {}) } };
+      const title = card?.querySelector(".entry-title")?.textContent.replace(/\s+/g, " ").trim();
+      return { host, range, given: { text, ...(card ? { card: card.dataset.file } : {}), ...(title ? { title } : {}) } };
     };
     const place = () => {
       shown = put ? undefined : chosen();

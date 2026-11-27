@@ -333,6 +333,17 @@ it("floats the chat's 引用 over words selected on a kit page, and quotes them 
   expect(quoted[1]).toEqual({ text: "Words" });
 });
 
+it("quotes the words selected and the card's title as they stand, however long: the board holds a quote to what a card holds", async () => {
+  const long = "Order more. ".repeat(250).trim(), named = "Restock ".repeat(15).trim();
+  const { window, document, load } = page(`<article class="entry" data-file="inbox/long.md"><h3 class="entry-title">${named}</h3><p id="w">${long}</p></article>`, "kit");
+  const { quoted } = quoting(window);
+  load();
+  choose(window, document, document.getElementById("w")!.firstChild!);
+  await settle(window);
+  (document.querySelector(".kit-quote-pick") as unknown as HTMLButtonElement).click();
+  expect(quoted).toEqual([{ text: long, card: "inbox/long.md", title: named }]);
+});
+
 it("floats no 引用 where no chat takes a quote, over a field, or after Escape, which leaves the words selected", async () => {
   const { window, document, load } = page(card, "kit");
   const { quoted, context } = quoting(window, false);
