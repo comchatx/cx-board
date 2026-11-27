@@ -288,3 +288,114 @@ it("asks a proposal for a yes or a no, its message under the page's line, and ha
   no.named("No")!.click();
   expect(no.said).toEqual([{ form: "comchatx.confirm/1", confirmed: false }]);
 });
+
+// The board's asks as a page sees them: whether a chat takes a quote, and the quotes asked for.
+function quoting(window: Window, quote = true): { quoted: unknown[]; context: { quote: boolean } } {
+  const quoted: unknown[] = [], context = { quote };
+  (window as unknown as { cxBoard: unknown }).cxBoard = { get context() { return context; }, on: () => {}, quote: async (given: unknown) => { quoted.push(given); return "quoted"; } };
+  return { quoted, context };
+}
+function choose(window: Window, document: Document, node: { textContent: string | null }, from = 0, to = (node.textContent ?? "").length): void {
+  const range = document.createRange();
+  range.setStart(node as never, from); range.setEnd(node as never, to);
+  const selection = window.getSelection()!;
+  selection.removeAllRanges(); selection.addRange(range);
+  document.dispatchEvent(new window.Event("selectionchange") as never);
+}
+const settle = (window: Window) => new Promise<void>((done) => window.requestAnimationFrame(() => done()));
+const card = `<article class="entry" data-file="inbox/restock.md"><h3 class="entry-title">Restock the yoga mat</h3><div class="entry-body"><p id="w">Order 400 units   before Friday.</p></div></article>
+<p id="out">Words outside any card.</p><input id="field" value="typed words">`;
+
+it("floats the chat's 引用 over words selected on a kit page, and quotes them from the card that names its file", async () => {
+  const { window, document, load } = page(card, "kit");
+  document.documentElement.dataset.locale = "zh";
+  const { quoted } = quoting(window);
+  load();
+  choose(window, document, document.getElementById("w")!.firstChild!);
+  await settle(window);
+  const pick = document.querySelector(".kit-quote-pick") as unknown as HTMLButtonElement;
+  expect(pick.hidden).toBe(false);
+  expect(pick.textContent).toBe("引用");
+  expect(pick.getAttribute("aria-label")).toBe("引用选中的文字");
+  expect(pick.tabIndex).toBe(-1);
+  pick.click();
+  expect(quoted).toEqual([{ text: "Order 400 units before Friday.", card: "inbox/restock.md", title: "Restock the yoga mat" }]);
+  expect(window.getSelection()!.isCollapsed).toBe(true);
+  expect(pick.hidden).toBe(true);
+
+  choose(window, document, document.getElementById("out")!.firstChild!, 0, 5);
+  await settle(window);
+  document.documentElement.dataset.locale = "en";
+  choose(window, document, document.getElementById("out")!.firstChild!, 0, 5);
+  await settle(window);
+  expect(pick.textContent).toBe("Quote");
+  pick.click();
+  expect(quoted[1]).toEqual({ text: "Words" });
+});
+
+it("names a card only when it holds the whole selection: words run from one card into the next are the page's, either way they are selected", async () => {
+  const { window, document, load } = page(`<article class="entry" data-file="inbox/a.md"><h3 class="entry-title">First card</h3><p id="a">Words of the first.</p></article>
+<article class="entry" data-file="inbox/b.md"><h3 class="entry-title">Second card</h3><p id="b">Words of the second.</p></article>`, "kit");
+  const { quoted } = quoting(window);
+  load();
+  const a = document.getElementById("a")!.firstChild!, b = document.getElementById("b")!.firstChild!;
+  const pick = () => document.querySelector(".kit-quote-pick") as unknown as HTMLButtonElement;
+  const across = async (anchor: unknown, at: number, focus: unknown, to: number) => {
+    window.getSelection()!.setBaseAndExtent(anchor as never, at, focus as never, to);
+    document.dispatchEvent(new window.Event("selectionchange") as never);
+    await settle(window);
+    pick().click();
+  };
+  await across(a, 0, b, 5);
+  await across(b, 5, a, 0);
+  await across(b, 20, b, 9);
+  expect(quoted).toEqual([
+    { text: "Words of the first. Second cardWords" },
+    { text: "Words of the first. Second cardWords" },
+    { text: "the second.", card: "inbox/b.md", title: "Second card" },
+  ]);
+});
+
+it("quotes the words selected and the card's title whole past the board's bound: the platform, not the kit, refuses a longer quote", async () => {
+  const long = "再订一批货，周五前到。 ".repeat(1200).trim(), named = "Restock ".repeat(15).trim();
+  const { window, document, load } = page(`<article class="entry" data-file="inbox/long.md"><h3 class="entry-title">${named}</h3><p id="w">${long}</p></article>`, "kit");
+  const { quoted } = quoting(window);
+  load();
+  choose(window, document, document.getElementById("w")!.firstChild!);
+  await settle(window);
+  (document.querySelector(".kit-quote-pick") as unknown as HTMLButtonElement).click();
+  expect(new TextEncoder().encode(long + named).length).toBeGreaterThan(32 * 1024);
+  expect(quoted).toEqual([{ text: long, card: "inbox/long.md", title: named }]);
+});
+
+it("floats no 引用 where no chat takes a quote, over a field, or after Escape, which leaves the words selected", async () => {
+  const { window, document, load } = page(card, "kit");
+  const { quoted, context } = quoting(window, false);
+  load();
+  const words = document.getElementById("w")!.firstChild!;
+  choose(window, document, words);
+  await settle(window);
+  expect(document.querySelector(".kit-quote-pick:not([hidden])")).toBeNull();
+
+  context.quote = true;
+  choose(window, document, document.getElementById("field")!);
+  await settle(window);
+  expect(document.querySelector(".kit-quote-pick:not([hidden])")).toBeNull();
+
+  choose(window, document, words);
+  await settle(window);
+  expect(document.querySelector(".kit-quote-pick:not([hidden])")).not.toBeNull();
+  document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape" }) as never);
+  expect(document.querySelector(".kit-quote-pick:not([hidden])")).toBeNull();
+  expect(window.getSelection()!.toString()).toBe("Order 400 units   before Friday.");
+  expect(quoted).toEqual([]);
+});
+
+it("draws nothing over a selection on a page that does not take the kit by its class, even where the board gives a quote", async () => {
+  const { window, document, load } = page(card);
+  quoting(window);
+  load();
+  choose(window, document, document.getElementById("w")!.firstChild!);
+  await settle(window);
+  expect(document.querySelector(".kit-quote-pick")).toBeNull();
+});

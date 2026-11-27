@@ -56,33 +56,46 @@ it("is a script the browser can compile, and a stylesheet and a list of the them
 });
 
 it("loads nothing and speaks across no frame's edge: the platform inlines both files under a policy that allows no fetch", () => {
-  for (const asks of ["url(", "@import", "image-set("]) expect(css, asks).not.toContain(asks);
+  for (const asks of ["@import", "image-set("]) expect(css, asks).not.toContain(asks);
+  // GitHub's rules draw a heading's link mark from a picture they carry in the address itself, which the policy lets a page draw.
+  expect([...css.matchAll(/url\(\s*["']?([a-z]+:)/g)].map((match) => match[1])).toEqual(["data:", "data:"]);
   for (const asks of ["fetch(", "import(", "import ", "require(", "XMLHttpRequest", "WebSocket", "EventSource", "sendBeacon", "importScripts", "Worker(", "postMessage", "innerHTML", "eval(", "new Function", ".src", "\"src\"", "\"href\"", "location"]) expect(js, asks).not.toContain(asks);
   // An SVG element is made in its namespace, which is a name and not an address.
   const addresses = [...`${css}\n${js}`.matchAll(/[a-z]+:\/\/[^\s"'`)]*/gi)].map((match) => match[0]);
-  expect(addresses).toEqual(["http://www.w3.org/2000/svg"]);
+  expect([...new Set(addresses)]).toEqual(["http://www.w3.org/2000/svg"]);
 });
 
 it("carries no words of its own: no Chinese, Japanese or Korean, no English phrase in the script's strings, and no generated text in the stylesheet", () => {
   const scripts = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
   expect(css).not.toMatch(scripts);
-  expect(js).not.toMatch(scripts);
-  const strings = literals(js);
+  // The one exception is the chat's 引用, its word and its name, which the kit floats over a selection where the board gives a quote.
+  const QUOTE_WORDS = ["引用", "Quote", "引用选中的文字", "Quote the selected words"];
+  const strings = literals(js).filter((text) => !QUOTE_WORDS.includes(text));
+  expect(strings.filter((text) => scripts.test(text))).toEqual([]);
+  expect(js.replace(/^\s*\/\/.*$/gm, "").replace(/"[^"\n]*"/g, "")).not.toMatch(scripts);
   expect(strings).toContain("kit-bar");
   // A phrase is two words of letters side by side; class names, keys, event names and an icon's path are not, and the script's
   // directive is the language's.
   expect(strings.filter((text) => text !== "use strict" && /\p{L}{2,}\s+\p{L}{2,}/u.test(text))).toEqual([]);
-  expect([...css.matchAll(/(?<![\w-])content\s*:\s*([^;}]+)/g)].map((match) => match[1]!.trim()).filter((value) => value !== '""')).toEqual([]);
+  // GitHub's rules generate a space and the brackets round a footnote's number, and no letter.
+  expect([...css.matchAll(/(?<![\w-])content\s*:\s*([^;}]+)/g)].map((match) => match[1]!.trim()).filter((value) => /\p{L}/u.test(value))).toEqual([]);
 });
 
 it("reads only the theme's names the platform sets on the page's root, each of them named in kit/theme.json, and sets none of them", () => {
-  const read = new Set([...css.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1]!));
+  const set = new Set([...css.matchAll(/(?:^|[;{\s])(--[\w-]+)\s*:/g)].map((match) => match[1]!));
+  const read = new Set([...css.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1]!).filter((name) => !set.has(name)));
+  // GitHub's rules read three names of GitHub's own that its published files set nowhere, so each falls back as GitHub's does.
+  const github = ["--bgColor-danger-muted", "--borderColor-muted", "--fgColor-danger"];
+  for (const name of github) read.delete(name);
+  // What the kit sets is its own: GitHub's colours in each theme, and the ring colour GitHub's files name and never set.
+  expect([...set].filter((name) => !/^--gh-\d+$/.test(name))).toEqual(["--borderColor-accent-emphasis"]);
+  // Two values the platform hands a page that the kit draws nothing in.
+  const unread = ["--warn", "--size-display"];
   // The chart and the timeline set their own place on each bar, span and hour, and the views their pill's, in the element's style.
   const own = new Set([...js.matchAll(/(--[\w-]+):\$\{/g)].map((match) => match[1]!));
   expect([...own].sort()).toEqual(["--at", "--from", "--kit-w", "--kit-x", "--to", "--v"]);
-  expect([...read].filter((name) => !own.has(name)).sort()).toEqual([...names].sort());
+  expect([...read].filter((name) => !own.has(name)).sort()).toEqual(names.filter((name) => !unread.includes(name)).sort());
   expect(Object.keys(theme).filter((name) => !name.startsWith("--"))).toEqual(["data-theme", "data-locale"]);
-  expect(css.match(/(^|[;{\s])--[\w-]+\s*:/g)).toBeNull();
   for (const meaning of Object.values(theme)) expect(meaning.trim()).not.toBe("");
   expect(js).not.toContain("getPropertyValue");
   expect(js).not.toContain("var(--");
@@ -144,7 +157,11 @@ it("holds every rule under the class a page takes the kit by, so a page that doe
 });
 
 it("touches nothing at load that it did not make: no write to the page's root or body, no search for the page's own elements, no listener before a label is shown", () => {
-  const code = js.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  // 引用 over a selection is the one part that hears the page from its load, and only where the board gives a quote: it is set apart here.
+  const all = js.replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  expect(all).toMatch(/^ {2}if \(typeof window\.cxBoard\?\.quote === "function"\) quotePick\(window\.cxBoard\);$/m);
+  const code = all.replace(/^ {2}function quotePick[\s\S]*?^ {2}}$/m, "").replace(/^ {2}if \(typeof window\.cxBoard.*$/m, "");
+  expect(code).not.toMatch(/quotePick|selectionchange/);
   for (const reach of ["document.body.", "document.documentElement.", "root.", "querySelector", "getElementsBy", "getElementById", "MutationObserver", "document.addEventListener", "document.write", "classList", ".dataset.theme"]) {
     const uses = code.split(reach).length - 1;
     // The label is put in the page's body only where no `.kit` holds the element it labels; `root.dataset.locale` and `root.lang` are read, never written.
