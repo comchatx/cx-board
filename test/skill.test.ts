@@ -54,6 +54,8 @@ it("tells cx how a page is written: page.html at the board's top, drawn in a fra
 it("tells cx, one sentence each, that a board file does not hold its turn, and which board is its own on a shared computer", () => {
   expect(skill).toContain("A file on the board does not hold your turn: the seller reads it when they come to the board.");
   expect(skill).toContain("When you name a file on the board to the seller, write its name in inline code, as `周报.pdf`, or its path in the board, as `文档/周报.pdf`, where two files share a name, rather than its path under `/tenant/board/<person>/`: the seller presses it to open it on a tab, and a name in plain text stays words.");
+  expect(skill).toContain("Only a file the board lists opens so: one in a tab of your board, at any depth under it. A file you make elsewhere, as in your home directory, stays words, so make a file for the seller in a tab.");
+  expect(skill).toContain("The computer's Chinese font is Noto Sans CJK SC, at `/usr/share/fonts/opentype/noto-cjk-sc/NotoSansCJKsc-Regular.otf`, OpenType with CFF outlines: fpdf2 and matplotlib take it as it is, and reportlab refuses it.");
   expect(skill).not.toContain("question box");
   expect(skill).toContain("Where several people share a computer, each has a board of their own, and yours is `/tenant/board/<person>/`, `<person>` being the account the board is drawn for.");
   for (const rule of ["must not", "never ", "do not", "don't"]) expect(skill.toLowerCase(), rule).not.toContain(rule);
